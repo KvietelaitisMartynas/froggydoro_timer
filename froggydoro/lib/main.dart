@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:numberpicker/numberpicker.dart';
 
 void main() {
   runApp(const MyApp());
@@ -7,116 +9,212 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      debugShowCheckedModeBanner: false,
+      title: 'Work & Break Timer',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
+        useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const TimerScreen(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class TimerScreen extends StatefulWidget {
+  const TimerScreen({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<TimerScreen> createState() => _TimerScreenState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _TimerScreenState extends State<TimerScreen> {
+  int _workHours = 0;  // Default work time is 0 hours
+  int _workMinutes = 25;  // Default work time is 25 minutes
+  int _workSeconds = 0;  // Default work time is 0 seconds
 
-  void _incrementCounter() {
+  int _breakHours = 0;  // Default break time is 0 hours
+  int _breakMinutes = 5;  // Default break time is 5 minutes
+  int _breakSeconds = 0;  // Default break time is 0 seconds
+
+  int _totalSeconds = 0;
+  bool _isBreakTime = false;
+  Timer? _timer;
+  bool _isRunning = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _setCustomTime();
+  }
+
+  void _startTimer() {
+    if (_isRunning || _totalSeconds == 0) return;
+
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      _isRunning = true;
     });
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_totalSeconds > 0) {
+        setState(() {
+          _totalSeconds--;
+        });
+      } else {
+        if (!_isBreakTime) {
+          _startBreakTime();
+        } else {
+          _restartWorkTime();
+        }
+      }
+    });
+  }
+
+  void _startBreakTime() {
+    setState(() {
+      _isBreakTime = true;
+      _totalSeconds = _breakHours * 3600 + _breakMinutes * 60 + _breakSeconds;
+    });
+  }
+
+  void _restartWorkTime() {
+    setState(() {
+      _isBreakTime = false;
+      _totalSeconds = _workHours * 3600 + _workMinutes * 60 + _workSeconds;
+    });
+    _startTimer();
+  }
+
+  void _stopTimer() {
+    _timer?.cancel();
+    setState(() {
+      _isRunning = false;
+    });
+  }
+
+  void _resetTimer() {
+    _stopTimer();
+    _isBreakTime = false;
+    _setCustomTime();
+  }
+
+  void _setCustomTime() {
+    setState(() {
+      _totalSeconds = _workHours * 3600 + _workMinutes * 60 + _workSeconds;
+    });
+  }
+
+  String _formatTime(int totalSeconds) {
+    int hours = totalSeconds ~/ 3600;
+    int minutes = (totalSeconds % 3600) ~/ 60;
+    int seconds = totalSeconds % 60;
+    return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
+      appBar: AppBar(title: const Text('Froggydoro')),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
+          children: [
             Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+              _isBreakTime ? "Break Time" : "Work Time",
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: _isBreakTime ? Colors.green : Colors.red),
+            ),
+            Text(
+              _formatTime(_totalSeconds),
+              style: const TextStyle(fontSize: 50, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+
+            // Work Time Pickers
+            const Text("Set Work Time"),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                NumberPicker(
+                  value: _workHours,
+                  minValue: 0,
+                  maxValue: 23,
+                  onChanged: (value) => setState(() => _workHours = value),
+                ),
+                const Text(" : "),
+                NumberPicker(
+                  value: _workMinutes,
+                  minValue: 0,
+                  maxValue: 59,
+                  onChanged: (value) => setState(() => _workMinutes = value),
+                ),
+                const Text(" : "),
+                NumberPicker(
+                  value: _workSeconds,
+                  minValue: 0,
+                  maxValue: 59,
+                  onChanged: (value) => setState(() => _workSeconds = value),
+                ),
+              ],
+            ),
+
+            // Break Time Pickers
+            const Text("Set Break Time"),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                NumberPicker(
+                  value: _breakHours,
+                  minValue: 0,
+                  maxValue: 23,
+                  onChanged: (value) => setState(() => _breakHours = value),
+                ),
+                const Text(" : "),
+                NumberPicker(
+                  value: _breakMinutes,
+                  minValue: 0,
+                  maxValue: 59,
+                  onChanged: (value) => setState(() => _breakMinutes = value),
+                ),
+                const Text(" : "),
+                NumberPicker(
+                  value: _breakSeconds,
+                  minValue: 0,
+                  maxValue: 59,
+                  onChanged: (value) => setState(() => _breakSeconds = value),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _setCustomTime,
+              child: const Text('Set'),
+            ),
+            const SizedBox(height: 10),
+
+            // Control Buttons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(onPressed: _startTimer, child: const Text('Start')),
+                const SizedBox(width: 10),
+                ElevatedButton(onPressed: _stopTimer, child: const Text('Stop')),
+                const SizedBox(width: 10),
+                ElevatedButton(onPressed: _resetTimer, child: const Text('Reset')),
+              ],
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
