@@ -36,6 +36,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   shared_preferences: ^2.0.8
   numberpicker: ^2.1.2
+  flutter_settings_screens: ^0.3.4
+  shared_preferences: ^2.0.6
 
 dev_dependencies:
   flutter_test:

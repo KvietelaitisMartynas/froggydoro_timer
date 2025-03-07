@@ -207,7 +207,10 @@ class _MainScreenState extends State<MainScreen>
                 ],
               ),
             ),
-            SettingsScreen(updateTimer: _updateTimer),
+            SettingsScreen(
+              updateTimer: _updateTimer,
+              onThemeModeChanged: widget.onThemeModeChanged,
+            ),
           ],
         ),
       ),
