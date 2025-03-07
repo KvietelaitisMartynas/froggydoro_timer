@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:froggydoro/screens/settings_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MainScreen extends StatefulWidget {
   final ValueChanged<ThemeMode> onThemeModeChanged;
@@ -26,6 +27,7 @@ class _MainScreenState extends State<MainScreen>
   bool _isBreakTime = false;
   Timer? _timer;
   bool _isRunning = false;
+  int _sessionCount = 0;
 
   @override
   void initState() {
@@ -36,6 +38,7 @@ class _MainScreenState extends State<MainScreen>
         _selectedIndex = _tabController.index;
       });
     });
+    _loadSessionCount();
   }
 
   @override
@@ -84,6 +87,10 @@ class _MainScreenState extends State<MainScreen>
         });
       } else {
         if (!_isBreakTime) {
+          setState(() {
+            _sessionCount++;
+          });
+          _saveSessionCount();
           _startBreakTime();
         } else {
           _restartWorkTime();
@@ -125,6 +132,18 @@ class _MainScreenState extends State<MainScreen>
     int minutes = (totalSeconds % 3600) ~/ 60;
     int seconds = totalSeconds % 60;
     return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  void _loadSessionCount() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _sessionCount = prefs.getInt('sessionCount') ?? 0;
+    });
+  }
+
+  void _saveSessionCount() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('sessionCount', _sessionCount);
   }
 
   @override
@@ -181,6 +200,10 @@ class _MainScreenState extends State<MainScreen>
                       ),
                     ],
                   ),
+                  Text(
+                    "Work sessions completed: $_sessionCount",
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  )
                 ],
               ),
             ),
