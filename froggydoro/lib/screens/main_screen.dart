@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:froggydoro/screens/settings_screen.dart';
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  final ValueChanged<ThemeMode> onThemeModeChanged;
+
+  const MainScreen({super.key, required this.onThemeModeChanged});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -128,7 +130,7 @@ class _MainScreenState extends State<MainScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Froggydoro')),
+      appBar: AppBar(title: const Text('froggydoro')),
       body: NotificationListener<OverscrollIndicatorNotification>(
         onNotification: (OverscrollIndicatorNotification notification) {
           notification.disallowIndicator();
@@ -147,7 +149,10 @@ class _MainScreenState extends State<MainScreen>
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: _isBreakTime ? Colors.green : Colors.red,
+                      color:
+                          _isBreakTime
+                              ? const Color.fromARGB(255, 144, 169, 85)
+                              : Color.fromARGB(255, 49, 87, 44),
                     ),
                   ),
                   Text(
