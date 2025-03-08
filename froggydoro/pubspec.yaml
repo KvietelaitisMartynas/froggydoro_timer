@@ -37,6 +37,7 @@ dependencies:
   shared_preferences: ^2.0.8
   numberpicker: ^2.1.2
   flutter_settings_screens: ^0.3.4
+  flutter_launcher_icons: ^0.13.1
 
 dev_dependencies:
   flutter_test:
@@ -90,3 +91,8 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon.png"
