@@ -74,7 +74,7 @@ class _MainScreenState extends State<MainScreen>
   }
 
   void _startTimer() {
-    if (_isRunning || _totalSeconds == 0) return;
+    if (_isRunning || (_workHours == 0 && _workMinutes == 0 && _workSeconds == 0)) return;
 
     setState(() {
       _isRunning = true;
