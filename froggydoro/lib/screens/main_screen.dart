@@ -38,6 +38,7 @@ class _MainScreenState extends State<MainScreen>
         _selectedIndex = _tabController.index;
       });
     });
+    _loadTimeSettings();
     _loadSessionCount();
   }
 
@@ -69,8 +70,13 @@ class _MainScreenState extends State<MainScreen>
       _breakHours = breakHours;
       _breakMinutes = breakMinutes;
       _breakSeconds = breakSeconds;
-      _totalSeconds = _workHours * 3600 + _workMinutes * 60 + _workSeconds;
+      if (_isBreakTime) {
+        _totalSeconds = _breakHours * 3600 + _breakMinutes * 60 + _breakSeconds;
+      } else {
+        _totalSeconds = _workHours * 3600 + _workMinutes * 60 + _workSeconds;
+      }
     });
+    _resetTimer();
   }
 
   void _startTimer() {
@@ -144,6 +150,19 @@ class _MainScreenState extends State<MainScreen>
   void _saveSessionCount() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setInt('sessionCount', _sessionCount);
+  }
+
+  void _loadTimeSettings() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _workHours = prefs.getInt('workHours') ?? 0;
+      _workMinutes = prefs.getInt('workMinutes') ?? 25;
+      _workSeconds = prefs.getInt('workSeconds') ?? 0;
+      _breakHours = prefs.getInt('breakHours') ?? 0;
+      _breakMinutes = prefs.getInt('breakMinutes') ?? 5;
+      _breakSeconds = prefs.getInt('breakSeconds') ?? 0;
+      _updateTimer(_workHours, _workMinutes, _workSeconds, _breakHours, _breakMinutes, _breakSeconds);
+    });
   }
 
   @override
