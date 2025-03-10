@@ -1,6 +1,6 @@
 # froggydoro
  
-***a pomodoro app with a froggy. that's it:)))***
+***a pomodoro app with a froggy. that's almost it or maybe not:)))***
 
 ## Description
 Froggydoro is an app based on the Pomodoro technique. It not only works on a mobile device, but also on a PC (in a browser or as a standalone app). The frog is the main character of the animations and its existence enlivens the user experience. These animations are several and can be unlocked by the user to overcome different challenges and achieve their goals. Challenges are listed in the 'achievements' section, which is available alongside the calendar. The calendar allows you to see when the different sessions took place (colours on the days indicate the type of session). <br>
