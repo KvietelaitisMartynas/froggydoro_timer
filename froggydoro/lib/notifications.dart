@@ -52,6 +52,7 @@ class Notifications {
       color: Color(0xFF99B97E),
       playSound: true,
       sound: RawResourceAndroidNotificationSound('res_notif2'),
+      enableVibration: true,
     );
 
     const NotificationDetails platformChannelSpecifics =
