@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class Notifications {
@@ -14,7 +16,7 @@ class Notifications {
 
   Future<void> init() async {
     const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher'); // Add your icon
+        AndroidInitializationSettings('@mipmap/frog2');
 
     const InitializationSettings initializationSettings =
         InitializationSettings(android: initializationSettingsAndroid);
@@ -34,7 +36,7 @@ class Notifications {
       channelDescription: 'Your channel description',
       importance: Importance.max,
       priority: Priority.high,
-      sound: RawResourceAndroidNotificationSound('notif2'),
+      color: Color(0xFF99B97E),
     );
 
     const NotificationDetails platformChannelSpecifics =
