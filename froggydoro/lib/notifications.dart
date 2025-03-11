@@ -1,5 +1,4 @@
 import 'dart:ui';
-
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class Notifications {
@@ -22,6 +21,20 @@ class Notifications {
         InitializationSettings(android: initializationSettingsAndroid);
 
     await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+    final AndroidNotificationChannel channel = AndroidNotificationChannel(
+      'froggydoro_channel',
+      'Froggydoro Notifications',
+      description: 'Froggydoro alerts for work/break sessions',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('res_notif2'),
+      playSound: true,
+    );
+
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(channel);
   }
 
   Future<void> showNotification({
@@ -31,12 +44,14 @@ class Notifications {
   }) async {
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
-      'channel_id',
-      'channel_name',
-      channelDescription: 'Your channel description',
+      'froggydoro_channel',
+      'Froggydoro Notifications',
+      channelDescription: 'Froggydoro alerts for work/break sessions',
       importance: Importance.max,
       priority: Priority.high,
       color: Color(0xFF99B97E),
+      playSound: true,
+      sound: RawResourceAndroidNotificationSound('res_notif2'),
     );
 
     const NotificationDetails platformChannelSpecifics =

@@ -116,8 +116,8 @@ class _MainScreenState extends State<MainScreen>
 
     Notifications().showNotification(
       id: 1,
-      title: 'Break Time!', 
-      body: 'Relax! You deserve it!',
+      title: 'Work time is over!', 
+      body: 'Start your break now!',
     );
   }
 
@@ -129,8 +129,8 @@ class _MainScreenState extends State<MainScreen>
 
     Notifications().showNotification(
       id: 2,
-      title: 'Work Time!', 
-      body: 'Go back to work now!',
+      title: 'Break is over!', 
+      body: 'Back to work!',
     );
 
     _startTimer();
