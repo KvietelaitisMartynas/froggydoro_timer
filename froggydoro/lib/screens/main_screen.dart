@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:froggydoro/screens/settings_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:froggydoro/notifications.dart';
 
 class MainScreen extends StatefulWidget {
   final ValueChanged<ThemeMode> onThemeModeChanged;
@@ -40,6 +41,8 @@ class _MainScreenState extends State<MainScreen>
     });
     _loadTimeSettings();
     _loadSessionCount();
+
+    Notifications().init();
   }
 
   @override
@@ -110,6 +113,12 @@ class _MainScreenState extends State<MainScreen>
       _isBreakTime = true;
       _totalSeconds = _breakHours * 3600 + _breakMinutes * 60 + _breakSeconds;
     });
+
+    Notifications().showNotification(
+      id: 1,
+      title: 'Break Time!', 
+      body: 'Relax! You deserve it!',
+    );
   }
 
   void _restartWorkTime() {
@@ -117,6 +126,13 @@ class _MainScreenState extends State<MainScreen>
       _isBreakTime = false;
       _totalSeconds = _workHours * 3600 + _workMinutes * 60 + _workSeconds;
     });
+
+    Notifications().showNotification(
+      id: 2,
+      title: 'Work Time!', 
+      body: 'Go back to work now!',
+    );
+
     _startTimer();
   }
 

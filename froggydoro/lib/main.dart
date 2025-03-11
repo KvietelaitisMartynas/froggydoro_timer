@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:froggydoro/notifications.dart';
 import 'package:froggydoro/screens/main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-void main() {
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Notifications().init();
+
   runApp(const MyApp());
 }
 
