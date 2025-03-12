@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'time_settings_screen.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class SettingsScreen extends StatefulWidget {
   final Function(int, int, int, int) updateTimer;
@@ -18,11 +19,13 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   ThemeMode _themeMode = ThemeMode.system;
+  bool _isWakeLockEnabled = false;
 
   @override
   void initState() {
     super.initState();
     _loadThemeMode();
+    _loadWakeLock();
   }
 
   Future<void> _loadThemeMode() async {
@@ -62,6 +65,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  void _loadWakeLock() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isWakeLockEnabled = prefs.getBool('isWakeLockEnabled') ?? false;
+    setState(() {
+      _isWakeLockEnabled = isWakeLockEnabled;
+    });
+    if (_isWakeLockEnabled) {
+      WakelockPlus.enable();
+    } else {
+      WakelockPlus.disable();
+    }
+  }
+
+  void _saveWakeLock(bool isWakeLockEnabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isWakeLockEnabled', isWakeLockEnabled);
+    if (_isWakeLockEnabled) {
+      WakelockPlus.enable();
+    } else {
+      WakelockPlus.disable();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -78,6 +104,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 10),
           buildChangeThemeSetting(),
+          const SizedBox(height: 10),
+          buildChangeWakelockSetting(),
           const SizedBox(height: 20),
           buildChangeTimeSetting(),
         ],
@@ -162,4 +190,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ],
     );
   }
+
+  Widget buildChangeWakelockSetting() {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text(
+        'Always on display',
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      ),
+      const SizedBox(height: 10),
+      Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.secondaryContainer,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: SwitchListTile(
+          title: const Text('Enable'),
+          value: _isWakeLockEnabled,
+          onChanged: (bool value) {
+            setState(() {
+              _isWakeLockEnabled = value;
+            });
+            _saveWakeLock(value);
+          },
+        ),
+      ),
+    ],
+  );
+}
 }
