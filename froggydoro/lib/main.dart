@@ -86,6 +86,9 @@ class _MyAppState extends State<MyApp> {
         ),
         brightness: Brightness.light,
         useMaterial3: true,
+        scaffoldBackgroundColor: Color(
+          0xFFF1F3E5,
+        ), // Light mode background color
       ),
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
