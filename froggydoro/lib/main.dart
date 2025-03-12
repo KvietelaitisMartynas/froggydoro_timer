@@ -4,7 +4,8 @@ import 'package:froggydoro/screens/main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -85,7 +86,30 @@ class _MyAppState extends State<MyApp> {
         ),
         brightness: Brightness.light,
         useMaterial3: true,
+        scaffoldBackgroundColor: Color(
+          0xFFF1F3E5,
+        ), // Light mode background color
+        appBarTheme: AppBarTheme(
+          backgroundColor:Color(
+            0xFFF1F3E5,
+          ),
+          foregroundColor: Color(
+            0xFF586F51,
+          ), // Match the background
+        ),
+          bottomNavigationBarTheme: BottomNavigationBarThemeData(
+            backgroundColor: Color(
+              0xFFF1F3E5,
+            ),
+            selectedItemColor: Color(
+              0xFF586F51,
+            ),
+            unselectedItemColor: Color(
+              0xFFB0C8AE,
+            ),
+          ),
       ),
+
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.green,
@@ -93,7 +117,29 @@ class _MyAppState extends State<MyApp> {
         ),
         brightness: Brightness.dark,
         useMaterial3: true,
-        scaffoldBackgroundColor: const Color.fromARGB(255, 19, 19, 19),
+        scaffoldBackgroundColor: Color(
+          0xFF3F5738,
+        ), // Dark mode background color
+        appBarTheme: AppBarTheme(
+          backgroundColor:Color(
+            0xFF3F5738,
+          ),
+          foregroundColor: Color(
+            0xFFB0C8AE,
+          ),
+        ),
+          bottomNavigationBarTheme: BottomNavigationBarThemeData(
+            backgroundColor: Color(
+              0xFF3F5738,
+            ),
+            selectedItemColor: Color(
+              0xFFB0C8AE,
+            ),
+            unselectedItemColor: Color(
+              0xFF63805C,
+            ),
+          ),
+        //scaffoldBackgroundColor: const Color.fromARGB(255, 19, 19, 19),
       ),
       themeMode: _themeMode,
       home: MainScreen(onThemeModeChanged: _onThemeModeChanged),
