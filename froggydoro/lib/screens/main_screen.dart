@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:froggydoro/screens/settings_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:froggydoro/notifications.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class MainScreen extends StatefulWidget {
   final ValueChanged<ThemeMode> onThemeModeChanged;
@@ -89,6 +90,8 @@ class _MainScreenState extends State<MainScreen>
       _isRunning = true;
     });
 
+    WakelockPlus.enable();
+
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_totalSeconds > 0) {
         setState(() {
@@ -141,6 +144,8 @@ class _MainScreenState extends State<MainScreen>
     setState(() {
       _isRunning = false;
     });
+
+    WakelockPlus.disable();
   }
 
   void _resetTimer() {

@@ -39,6 +39,7 @@ dependencies:
   flutter_settings_screens: ^0.3.4
   flutter_launcher_icons: ^0.13.1
   flutter_local_notifications: ^18.0.1
+  wakelock_plus: ^1.2.10
 
 dev_dependencies:
   flutter_test:
