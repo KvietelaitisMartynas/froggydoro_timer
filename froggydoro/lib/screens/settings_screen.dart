@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'time_settings_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
-  final Function(int, int, int, int, int, int) updateTimer;
+  final Function(int, int, int, int) updateTimer;
   final ValueChanged<ThemeMode> onThemeModeChanged;
 
   const SettingsScreen({
