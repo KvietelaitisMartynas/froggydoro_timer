@@ -77,7 +77,9 @@ class _MainScreenState extends State<MainScreen>
   }
 
   void _startTimer() {
-    if (_isRunning || (_workMinutes == 0 && _workSeconds == 0)) return;
+    if (_isRunning ||
+        (_workHours == 0 && _workMinutes == 0 && _workSeconds == 0))
+      return;
 
     setState(() {
       _isRunning = true;
@@ -110,7 +112,7 @@ class _MainScreenState extends State<MainScreen>
 
     Notifications().showNotification(
       id: 1,
-      title: 'Work time is over!', 
+      title: 'Work time is over!',
       body: 'Start your break now!',
     );
   }
@@ -123,7 +125,7 @@ class _MainScreenState extends State<MainScreen>
 
     Notifications().showNotification(
       id: 2,
-      title: 'Break is over!', 
+      title: 'Break is over!',
       body: 'Back to work!',
     );
 
@@ -167,15 +169,34 @@ class _MainScreenState extends State<MainScreen>
       _workMinutes = prefs.getInt('workMinutes') ?? 25;
       _workSeconds = 0;
       _breakMinutes = prefs.getInt('breakMinutes') ?? 5;
-      _breakSeconds = 0;
-      _updateTimer(_workMinutes, _workSeconds, _breakMinutes, _breakSeconds);
+      _breakSeconds = prefs.getInt('breakSeconds') ?? 0;
+      _updateTimer(
+        _workHours,
+        _workMinutes,
+        _workSeconds,
+        _breakHours,
+        _breakMinutes,
+        _breakSeconds,
+      );
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('froggydoro')),
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text(
+          'Froggydoro',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontWeight: FontWeight.w600,
+            fontSize: 24,
+            fontStyle: FontStyle.normal,
+            letterSpacing: -0.24,
+          ),
+        ),
+      ),
       body: NotificationListener<OverscrollIndicatorNotification>(
         onNotification: (OverscrollIndicatorNotification notification) {
           notification.disallowIndicator();
@@ -187,8 +208,8 @@ class _MainScreenState extends State<MainScreen>
           children: [
             Center(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  Row(children: [Expanded(child: Container(height: 120))]),
                   Text(
                     _isBreakTime ? "Break Time" : "Work Time",
                     style: TextStyle(
@@ -200,6 +221,14 @@ class _MainScreenState extends State<MainScreen>
                               : Color.fromARGB(255, 49, 87, 44),
                     ),
                   ),
+                  Text(
+                    "Work sessions completed: $_sessionCount",
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Row(children: [Expanded(child: Container(height: 10))]),
                   Text(
                     _formatTime(_totalSeconds),
                     style: const TextStyle(
@@ -226,10 +255,6 @@ class _MainScreenState extends State<MainScreen>
                       ),
                     ],
                   ),
-                  Text(
-                    "Work sessions completed: $_sessionCount",
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  )
                 ],
               ),
             ),
@@ -240,16 +265,25 @@ class _MainScreenState extends State<MainScreen>
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.timer), label: "Timer"),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: "Settings",
-          ),
-        ],
+      bottomNavigationBar: Theme(
+        data: Theme.of(context).copyWith(
+          splashFactory: NoSplash.splashFactory, // Removes ripple effect
+          highlightColor: Colors.transparent, // Removes highlight effect
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _selectedIndex,
+          selectedFontSize: 0,
+          elevation: 0,
+          iconSize: 30,
+          onTap: _onItemTapped,
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.timer), label: ""),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.settings),
+              label: "Settings",
+            ),
+          ],
+        ),
       ),
     );
   }
