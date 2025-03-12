@@ -195,13 +195,11 @@ class _MainScreenState extends State<MainScreen>
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        backgroundColor: Color(0xFFF1F3E5), // Light mode background color
         title: const Text(
           'Froggydoro',
           style: TextStyle(
             fontFamily: 'Inter',
             fontWeight: FontWeight.w600,
-            color: Color.fromARGB(255, 88, 111, 81),
             fontSize: 24,
             fontStyle: FontStyle.normal,
             letterSpacing: -0.24,
@@ -287,7 +285,6 @@ class _MainScreenState extends State<MainScreen>
           elevation: 0,
           iconSize: 30,
           onTap: _onItemTapped,
-          backgroundColor: Color(0xFFF1F3E5), // Light mode background color
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.timer), label: ""),
             BottomNavigationBarItem(
