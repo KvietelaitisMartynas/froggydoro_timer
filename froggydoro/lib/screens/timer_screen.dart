@@ -2,18 +2,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 class TimerScreen extends StatefulWidget {
-  final int workHours;
   final int workMinutes;
   final int workSeconds;
-  final int breakHours;
   final int breakMinutes;
   final int breakSeconds;
 
   const TimerScreen({
-    required this.workHours,
     required this.workMinutes,
     required this.workSeconds,
-    required this.breakHours,
     required this.breakMinutes,
     required this.breakSeconds,
     super.key,
@@ -39,20 +35,18 @@ class _TimerScreenState extends State<TimerScreen> {
     _remainingTime =
         _isWorkPhase
             ? _convertToSeconds(
-              widget.workHours,
               widget.workMinutes,
               widget.workSeconds,
             )
             : _convertToSeconds(
-              widget.breakHours,
               widget.breakMinutes,
               widget.breakSeconds,
             );
     setState(() {});
   }
 
-  int _convertToSeconds(int hours, int minutes, int seconds) {
-    return (hours * 3600) + (minutes * 60) + seconds;
+  int _convertToSeconds(int minutes, int seconds) {
+    return (minutes * 60) + seconds;
   }
 
   void _startPauseTimer() {
@@ -91,10 +85,9 @@ class _TimerScreenState extends State<TimerScreen> {
   }
 
   String _formatTime(int seconds) {
-    int hours = seconds ~/ 3600;
     int minutes = (seconds % 3600) ~/ 60;
     int secs = seconds % 60;
-    return "${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}";
+    return "${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}";
   }
 
   @override

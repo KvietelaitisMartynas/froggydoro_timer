@@ -18,10 +18,8 @@ class _MainScreenState extends State<MainScreen>
   late TabController _tabController;
   int _selectedIndex = 0;
 
-  int _workHours = 0;
   int _workMinutes = 25;
   int _workSeconds = 0;
-  int _breakHours = 0;
   int _breakMinutes = 5;
   int _breakSeconds = 0;
   int _totalSeconds = 0;
@@ -59,31 +57,27 @@ class _MainScreenState extends State<MainScreen>
   }
 
   void _updateTimer(
-    int workHours,
     int workMinutes,
     int workSeconds,
-    int breakHours,
     int breakMinutes,
     int breakSeconds,
   ) {
     setState(() {
-      _workHours = workHours;
       _workMinutes = workMinutes;
       _workSeconds = workSeconds;
-      _breakHours = breakHours;
       _breakMinutes = breakMinutes;
       _breakSeconds = breakSeconds;
       if (_isBreakTime) {
-        _totalSeconds = _breakHours * 3600 + _breakMinutes * 60 + _breakSeconds;
+        _totalSeconds = _breakMinutes * 60 + _breakSeconds;
       } else {
-        _totalSeconds = _workHours * 3600 + _workMinutes * 60 + _workSeconds;
+        _totalSeconds = _workMinutes * 60 + _workSeconds;
       }
     });
     _resetTimer();
   }
 
   void _startTimer() {
-    if (_isRunning || (_workHours == 0 && _workMinutes == 0 && _workSeconds == 0)) return;
+    if (_isRunning || (_workMinutes == 0 && _workSeconds == 0)) return;
 
     setState(() {
       _isRunning = true;
@@ -111,7 +105,7 @@ class _MainScreenState extends State<MainScreen>
   void _startBreakTime() {
     setState(() {
       _isBreakTime = true;
-      _totalSeconds = _breakHours * 3600 + _breakMinutes * 60 + _breakSeconds;
+      _totalSeconds = _breakMinutes * 60 + _breakSeconds;
     });
 
     Notifications().showNotification(
@@ -124,7 +118,7 @@ class _MainScreenState extends State<MainScreen>
   void _restartWorkTime() {
     setState(() {
       _isBreakTime = false;
-      _totalSeconds = _workHours * 3600 + _workMinutes * 60 + _workSeconds;
+      _totalSeconds = _workMinutes * 60 + _workSeconds;
     });
 
     Notifications().showNotification(
@@ -146,14 +140,13 @@ class _MainScreenState extends State<MainScreen>
   void _resetTimer() {
     _stopTimer();
     _isBreakTime = false;
-    _totalSeconds = _workHours * 3600 + _workMinutes * 60 + _workSeconds;
+    _totalSeconds = _workMinutes * 60 + _workSeconds;
   }
 
   String _formatTime(int totalSeconds) {
-    int hours = totalSeconds ~/ 3600;
-    int minutes = (totalSeconds % 3600) ~/ 60;
+    int minutes = totalSeconds ~/ 60;
     int seconds = totalSeconds % 60;
-    return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
   void _loadSessionCount() async {
@@ -171,13 +164,11 @@ class _MainScreenState extends State<MainScreen>
   void _loadTimeSettings() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      _workHours = prefs.getInt('workHours') ?? 0;
       _workMinutes = prefs.getInt('workMinutes') ?? 25;
-      _workSeconds = prefs.getInt('workSeconds') ?? 0;
-      _breakHours = prefs.getInt('breakHours') ?? 0;
+      _workSeconds = 0;
       _breakMinutes = prefs.getInt('breakMinutes') ?? 5;
-      _breakSeconds = prefs.getInt('breakSeconds') ?? 0;
-      _updateTimer(_workHours, _workMinutes, _workSeconds, _breakHours, _breakMinutes, _breakSeconds);
+      _breakSeconds = 0;
+      _updateTimer(_workMinutes, _workSeconds, _breakMinutes, _breakSeconds);
     });
   }
 
