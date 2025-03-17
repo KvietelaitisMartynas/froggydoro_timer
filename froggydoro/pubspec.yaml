@@ -41,6 +41,7 @@ dependencies:
   flutter_local_notifications: ^18.0.1
   wakelock_plus: ^1.2.10
   permission_handler: ^11.4.0
+  flutter_svg: ^2.0.17
 
 dev_dependencies:
   flutter_test:
@@ -65,6 +66,9 @@ flutter:
   uses-material-design: true
   assets:
     - assets/icon.png
+    - assets/clock.png
+    - assets/Sliders.png
+    - assets/default_froggy_transparent.png
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

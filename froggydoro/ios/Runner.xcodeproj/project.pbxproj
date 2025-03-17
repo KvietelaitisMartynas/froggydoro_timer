@@ -16,6 +16,9 @@
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
 		AAAFBC97577424EB8F91085B /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B9E110DBC59BBC4549C153F /* Pods_RunnerTests.framework */; };
+		CA6CA5062D88A4DA00F66629 /* clock.png in Resources */ = {isa = PBXBuildFile; fileRef = CA6CA5052D88A4DA00F66629 /* clock.png */; };
+		CA7ACEC52D88A7220016E776 /* Sliders.png in Resources */ = {isa = PBXBuildFile; fileRef = CA7ACEC42D88A7220016E776 /* Sliders.png */; };
+		CA7ACEC72D88B46B0016E776 /* default_froggy.png in Resources */ = {isa = PBXBuildFile; fileRef = CA7ACEC62D88B46B0016E776 /* default_froggy.png */; };
 		CABC1C7D2D8197080017E15C /* res_notif.wav in Resources */ = {isa = PBXBuildFile; fileRef = CABC1C7C2D8197080017E15C /* res_notif.wav */; };
 /* End PBXBuildFile section */
 
@@ -66,6 +69,9 @@
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A5CBC1191DDE17C282E3E835 /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
 		BE87FE4B93B5711D385E6171 /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
+		CA6CA5052D88A4DA00F66629 /* clock.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = clock.png; sourceTree = "<group>"; };
+		CA7ACEC42D88A7220016E776 /* Sliders.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Sliders.png; sourceTree = "<group>"; };
+		CA7ACEC62D88B46B0016E776 /* default_froggy.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = default_froggy.png; sourceTree = "<group>"; };
 		CABC1C7C2D8197080017E15C /* res_notif.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = res_notif.wav; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -131,6 +137,9 @@
 				4BD085BFFD3C0258A5B9A2FF /* Pods */,
 				B58837FDEC607B376C0B6B44 /* Frameworks */,
 				CABC1C7C2D8197080017E15C /* res_notif.wav */,
+				CA6CA5052D88A4DA00F66629 /* clock.png */,
+				CA7ACEC42D88A7220016E776 /* Sliders.png */,
+				CA7ACEC62D88B46B0016E776 /* default_froggy.png */,
 			);
 			sourceTree = "<group>";
 		};
@@ -263,11 +272,14 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CA6CA5062D88A4DA00F66629 /* clock.png in Resources */,
 				97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */,
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
 				CABC1C7D2D8197080017E15C /* res_notif.wav in Resources */,
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
+				CA7ACEC52D88A7220016E776 /* Sliders.png in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
+				CA7ACEC72D88B46B0016E776 /* default_froggy.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

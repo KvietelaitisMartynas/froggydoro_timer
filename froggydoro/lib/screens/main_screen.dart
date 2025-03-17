@@ -77,9 +77,7 @@ class _MainScreenState extends State<MainScreen>
   }
 
   void _startTimer() {
-    if (_isRunning ||
-        (_workHours == 0 && _workMinutes == 0 && _workSeconds == 0))
-      return;
+    if (_isRunning || (_workMinutes == 0 && _workSeconds == 0)) return;
 
     setState(() {
       _isRunning = true;
@@ -170,19 +168,16 @@ class _MainScreenState extends State<MainScreen>
       _workSeconds = 0;
       _breakMinutes = prefs.getInt('breakMinutes') ?? 5;
       _breakSeconds = prefs.getInt('breakSeconds') ?? 0;
-      _updateTimer(
-        _workHours,
-        _workMinutes,
-        _workSeconds,
-        _breakHours,
-        _breakMinutes,
-        _breakSeconds,
-      );
+      _updateTimer(_workMinutes, _workSeconds, _breakMinutes, _breakSeconds);
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final screenHeight = screenSize.height;
+    final screenWidth = screenSize.width;
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -209,33 +204,37 @@ class _MainScreenState extends State<MainScreen>
             Center(
               child: Column(
                 children: [
-                  Row(children: [Expanded(child: Container(height: 120))]),
+                  Spacer(flex: 1),
                   Text(
                     _isBreakTime ? "Break Time" : "Work Time",
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color:
-                          _isBreakTime
-                              ? const Color.fromARGB(255, 144, 169, 85)
-                              : Color.fromARGB(255, 49, 87, 44),
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w300,
+                      fontStyle: FontStyle.italic,
+                      fontSize: screenWidth * 0.06,
                     ),
                   ),
+                  SizedBox(height: screenHeight * 0.02),
                   Text(
                     "Work sessions completed: $_sessionCount",
-                    style: const TextStyle(
-                      fontSize: 18,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.bold,
+                      fontSize: screenWidth * 0.045,
                     ),
                   ),
-                  Row(children: [Expanded(child: Container(height: 10))]),
+                  Spacer(flex: 1),
+                  Image.asset(
+                    'assets/default_froggy_transparent.png',
+                    height: screenHeight * 0.3,
+                  ),
+                  Spacer(flex: 1),
                   Text(
                     _formatTime(_totalSeconds),
-                    style: const TextStyle(
-                      fontSize: 50,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.bold,
+                      fontSize: screenWidth * 0.12,
                     ),
                   ),
+                  Spacer(flex: 1),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -255,6 +254,7 @@ class _MainScreenState extends State<MainScreen>
                       ),
                     ],
                   ),
+                  Spacer(flex: 1),
                 ],
               ),
             ),
@@ -274,12 +274,15 @@ class _MainScreenState extends State<MainScreen>
           currentIndex: _selectedIndex,
           selectedFontSize: 0,
           elevation: 0,
-          iconSize: 30,
+          iconSize: screenWidth * 0.08,
           onTap: _onItemTapped,
           items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.timer), label: ""),
             BottomNavigationBarItem(
-              icon: Icon(Icons.settings),
+              icon: ImageIcon(AssetImage('assets/clock.png')),
+              label: "",
+            ),
+            BottomNavigationBarItem(
+              icon: ImageIcon(AssetImage('assets/Sliders.png')),
               label: "Settings",
             ),
           ],

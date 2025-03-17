@@ -90,24 +90,19 @@ class _MyAppState extends State<MyApp> {
           0xFFF1F3E5,
         ), // Light mode background color
         appBarTheme: AppBarTheme(
-          backgroundColor:Color(
-            0xFFF1F3E5,
-          ),
-          foregroundColor: Color(
-            0xFF586F51,
-          ), // Match the background
+          backgroundColor: Color(0xFFF1F3E5),
+          foregroundColor: Color(0xFF586F51), // Match the background
         ),
-          bottomNavigationBarTheme: BottomNavigationBarThemeData(
-            backgroundColor: Color(
-              0xFFF1F3E5,
-            ),
-            selectedItemColor: Color(
-              0xFF586F51,
-            ),
-            unselectedItemColor: Color(
-              0xFFB0C8AE,
-            ),
-          ),
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+          backgroundColor: Color(0xFFF1F3E5),
+          selectedItemColor: Color(0xFF586F51),
+          unselectedItemColor: Color(0xFFB0C8AE),
+        ),
+        textTheme: TextTheme(
+          bodyLarge: TextStyle(
+            color: Color(0xFF586F51),
+          ), // Light theme text color
+        ),
       ),
 
       darkTheme: ThemeData(
@@ -121,24 +116,19 @@ class _MyAppState extends State<MyApp> {
           0xFF3F5738,
         ), // Dark mode background color
         appBarTheme: AppBarTheme(
-          backgroundColor:Color(
-            0xFF3F5738,
-          ),
-          foregroundColor: Color(
-            0xFFB0C8AE,
-          ),
+          backgroundColor: Color(0xFF3F5738),
+          foregroundColor: Color(0xFFB0C8AE),
         ),
-          bottomNavigationBarTheme: BottomNavigationBarThemeData(
-            backgroundColor: Color(
-              0xFF3F5738,
-            ),
-            selectedItemColor: Color(
-              0xFFB0C8AE,
-            ),
-            unselectedItemColor: Color(
-              0xFF63805C,
-            ),
-          ),
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+          backgroundColor: Color(0xFF3F5738),
+          selectedItemColor: Color(0xFFB0C8AE),
+          unselectedItemColor: Color(0xFF63805C),
+        ),
+        textTheme: TextTheme(
+          bodyLarge: TextStyle(
+            color: Color(0xFFB0C8AE),
+          ), // Dark theme text color
+        ),
         //scaffoldBackgroundColor: const Color.fromARGB(255, 19, 19, 19),
       ),
       themeMode: _themeMode,
