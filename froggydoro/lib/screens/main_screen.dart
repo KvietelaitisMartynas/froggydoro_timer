@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:froggydoro/screens/settings_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:froggydoro/notifications.dart';
+import 'package:froggydoro/widgets/music_Manager.dart';
 
 class MainScreen extends StatefulWidget {
   final ValueChanged<ThemeMode> onThemeModeChanged;
@@ -79,6 +80,8 @@ class _MainScreenState extends State<MainScreen>
   void _startTimer() {
     if (_isRunning || (_workMinutes == 0 && _workSeconds == 0)) return;
 
+    AudioManager().playMusic();
+
     setState(() {
       _isRunning = true;
     });
@@ -103,6 +106,7 @@ class _MainScreenState extends State<MainScreen>
   }
 
   void _startBreakTime() {
+    AudioManager().fadeOutMusic();
     setState(() {
       _isBreakTime = true;
       _totalSeconds = _breakMinutes * 60 + _breakSeconds;
@@ -116,6 +120,7 @@ class _MainScreenState extends State<MainScreen>
   }
 
   void _restartWorkTime() {
+    AudioManager().playMusic();
     setState(() {
       _isBreakTime = false;
       _totalSeconds = _workMinutes * 60 + _workSeconds;
@@ -131,6 +136,7 @@ class _MainScreenState extends State<MainScreen>
   }
 
   void _stopTimer() {
+    AudioManager().pauseMusic();
     _timer?.cancel();
     setState(() {
       _isRunning = false;
@@ -138,6 +144,7 @@ class _MainScreenState extends State<MainScreen>
   }
 
   void _resetTimer() {
+    AudioManager().stopMusic();
     _stopTimer();
     _isBreakTime = false;
     _totalSeconds = _workMinutes * 60 + _workSeconds;

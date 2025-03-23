@@ -13,9 +13,63 @@ class SettingsScreen extends StatefulWidget {
     super.key,
   });
 
+  static Future<String> getAmbience() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('selectedAmbience') ?? 'Bonfire';
+  }
+
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
+
+class _DropdownMenu extends StatefulWidget {
+  final List<String> options;
+  final String initialValue;
+  final ValueChanged<String?> onChanged;
+
+  const _DropdownMenu({
+    Key? key,
+    required this.options,
+    required this.initialValue,
+    required this.onChanged,
+  }) : super(key: key);
+
+  @override
+  _DropdownMenuState createState() => _DropdownMenuState();
+}
+
+
+class _DropdownMenuState extends State<_DropdownMenu> {
+  late String selectedValue;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedValue = widget.initialValue;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButton<String>(
+      value: selectedValue,
+      onChanged: (String? newValue) {
+        if (newValue != null) {
+          setState(() {
+            selectedValue = newValue;
+          });
+          widget.onChanged(newValue);
+        }
+      },
+      items: widget.options.map<DropdownMenuItem<String>>((String value) {
+        return DropdownMenuItem<String>(
+          value: value,
+          child: Text(value),
+        );
+      }).toList(),
+    );
+  }
+}
+
 
 class _SettingsScreenState extends State<SettingsScreen> {
   ThemeMode _themeMode = ThemeMode.system;
@@ -108,6 +162,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           buildChangeWakelockSetting(),
           const SizedBox(height: 20),
           buildChangeTimeSetting(),
+          const SizedBox(height: 20),
+          buildChangeAmbienceSetting(),
         ],
       ),
     );
@@ -219,4 +275,70 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ],
   );
 }
+
+static const String ambienceKey = 'selectedAmbience';
+
+Future<void> _saveAmbience(String ambience) async{
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString(ambienceKey, ambience);
+}
+
+Future<void> _loadAmbience() async{
+  final prefs = await SharedPreferences.getInstance();
+  setState((){
+    selectedAmbience = prefs.getString(ambienceKey) ?? 'bonfire';
+  });
+}
+
+String selectedAmbience = 'Bonfire';
+  
+Widget buildChangeAmbienceSetting() {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text(
+        'Ambience Settings',
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      ),
+      const SizedBox(height: 10),
+      Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.secondaryContainer,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: ListTile(
+          title: const Text('Ambient Sounds'),
+          subtitle: Text(selectedAmbience),
+          trailing: const Icon(Icons.arrow_drop_down),
+          onTap: () {
+            showModalBottomSheet(
+              context: context,
+              builder: (BuildContext context) {
+                return Container(
+                  padding: const EdgeInsets.all(10),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: ["Bonfire", "Chirping", "Rain", "River"]
+                        .map((String value) => ListTile(
+                              title: Text(value),
+                              onTap: () async {
+                                setState(() {
+                                  selectedAmbience = value;
+                                });
+                                await _saveAmbience(value);
+                                Navigator.pop(context);
+                              },
+                            ))
+                        .toList(),
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      ),
+    ],
+  );
+}
+
 }
