@@ -80,44 +80,49 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.initState();
     _loadThemeMode();
     _loadWakeLock();
+    _loadAmbience();
   }
 
-  Future<void> _loadThemeMode() async {
-    final prefs = await SharedPreferences.getInstance();
-    final themeMode = prefs.getString('themeMode') ?? 'system';
-    setState(() {
-      _themeMode = _getThemeModeFromString(themeMode);
-    });
-  }
+Future<void> _loadThemeMode() async {
+  final prefs = await SharedPreferences.getInstance();
+  final themeModeString = prefs.getString('themeMode') ?? 'system';
+  
+  setState(() {
+    _themeMode = _getThemeModeFromString(themeModeString);
+    selectedTheme = themeOptions.keys.firstWhere(
+      (key) => themeOptions[key] == themeModeString, 
+      orElse: () => 'Follow System' // Default
+    );
+  });
+}
 
-  Future<void> _saveThemeMode(ThemeMode themeMode) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('themeMode', _getStringFromThemeMode(themeMode));
-  }
-
+Future<void> _saveThemeMode(ThemeMode themeMode) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString('themeMode', _getStringFromThemeMode(themeMode));
+}
   ThemeMode _getThemeModeFromString(String themeMode) {
-    switch (themeMode) {
-      case 'light':
-        return ThemeMode.light;
-      case 'dark':
-        return ThemeMode.dark;
-      case 'system':
-      default:
-        return ThemeMode.system;
-    }
+  switch (themeMode) {
+    case 'light':
+      return ThemeMode.light;
+    case 'dark':
+      return ThemeMode.dark;
+    case 'system':
+    default:
+      return ThemeMode.system;
   }
+}
 
-  String _getStringFromThemeMode(ThemeMode themeMode) {
-    switch (themeMode) {
-      case ThemeMode.light:
-        return 'light';
-      case ThemeMode.dark:
-        return 'dark';
-      case ThemeMode.system:
-      default:
-        return 'system';
-    }
+String _getStringFromThemeMode(ThemeMode themeMode) {
+  switch (themeMode) {
+    case ThemeMode.light:
+      return 'light';
+    case ThemeMode.dark:
+      return 'dark';
+    case ThemeMode.system:
+    default:
+      return 'system';
   }
+}
 
   void _loadWakeLock() async {
     final prefs = await SharedPreferences.getInstance();
@@ -169,50 +174,71 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  final Map<String, Map<String, dynamic>> themeOptions = {
+    'Light Mode': {'value': 'light', 'icon': Icons.wb_sunny},
+    'Dark Mode': {'value': 'dark', 'icon': Icons.nightlight_round}, 
+    'Follow System': {'value': 'system', 'icon': Icons.brightness_4}, 
+  };
+
+  String selectedTheme = 'Follow System';
+
   Widget buildChangeThemeSetting() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Theme Mode',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text(
+        'Theme Mode',
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      ),
+      const SizedBox(height: 10),
+      Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.secondaryContainer,
+          borderRadius: BorderRadius.circular(10),
         ),
-        const SizedBox(height: 10),
-        Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.secondaryContainer,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Column(
+        child: ListTile(
+          title: const Text('Theme Mode'),
+          subtitle: Row(
             children: [
-              SwitchListTile(
-                title: const Text('Dark Mode'),
-                value: _themeMode == ThemeMode.dark,
-                onChanged: (bool value) {
-                  setState(() {
-                    _themeMode = value ? ThemeMode.dark : ThemeMode.light;
-                  });
-                  widget.onThemeModeChanged(_themeMode);
-                  _saveThemeMode(_themeMode);
-                },
-              ),
-              SwitchListTile(
-                title: const Text('Follow System'),
-                value: _themeMode == ThemeMode.system,
-                onChanged: (bool value) {
-                  setState(() {
-                    _themeMode = value ? ThemeMode.system : ThemeMode.light;
-                  });
-                  widget.onThemeModeChanged(_themeMode);
-                  _saveThemeMode(_themeMode);
-                },
-              ),
+              Icon(themeOptions[selectedTheme]?['icon'], size: 20),
+              const SizedBox(width: 8,),
+              Text(selectedTheme),
             ],
           ),
+          trailing: const Icon(Icons.arrow_drop_down),
+          onTap: () {
+            showModalBottomSheet(
+              context: context,
+              builder: (BuildContext context) {
+                return Container(
+                  padding: const EdgeInsets.all(10),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: themeOptions.entries.map((entry) => ListTile(
+                          leading: Icon(entry.value['icon']),
+                          title: Text(entry.key),
+                          onTap: () async {
+                            setState(() {
+                              selectedTheme = entry.key; 
+                              _themeMode = _getThemeModeFromString(entry.value['value']); 
+                            });
+                            await _saveThemeMode(_themeMode);
+                            widget.onThemeModeChanged(_themeMode);
+                            Navigator.pop(context);
+                          },
+                        ))
+                        .toList(),
+                  ),
+                );
+              },
+            );
+          },
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
+
 
   Widget buildChangeTimeSetting() {
     return Column(
