@@ -102,7 +102,8 @@ class _MainScreenState extends State<MainScreen>
           );
           _showSessionCompletePopup(
             context,
-            'Your work session is complete. Start your break.',
+            'Your work session is complete.',
+            'Start your break.',
             _startBreakTime,
           );
         } else {
@@ -113,7 +114,8 @@ class _MainScreenState extends State<MainScreen>
           );
           _showSessionCompletePopup(
             context,
-            'Your break is over. Start your work session.',
+            'Your break is over.',
+            'Start your work session.',
             _restartWorkTime,
           );
         }
@@ -148,6 +150,8 @@ class _MainScreenState extends State<MainScreen>
     _stopTimer();
     _isBreakTime = false;
     _totalSeconds = _workMinutes * 60 + _workSeconds;
+    _sessionCount = 0;
+    _saveSessionCount();
   }
 
   String _formatTime(int totalSeconds) {
@@ -181,26 +185,60 @@ class _MainScreenState extends State<MainScreen>
 
   void _showSessionCompletePopup(
     BuildContext context,
-    String message,
+    String message_title,
+    String message_body,
     VoidCallback onPressed,
   ) {
+    final theme = Theme.of(context);
+    final backgroundColor =
+        theme.brightness == Brightness.dark
+            ? Color(0xFF3F5738)
+            : Color(0xFFF1F3E5);
+    final buttonColor =
+        theme.brightness == Brightness.dark
+            ? Color(0xFFB0C8AE)
+            : Color(0xFF586F51);
+    final textColor =
+        theme.brightness == Brightness.dark ? Colors.black : Colors.white;
+
     showModalBottomSheet(
       context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
+      ),
       builder: (BuildContext context) {
         return SafeArea(
           child: Container(
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
+            ),
             padding: const EdgeInsets.all(16.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(message, style: const TextStyle(fontSize: 18.0)),
+                Center(
+                  child: Text(
+                    message_title,
+                    style: const TextStyle(
+                      fontSize: 20.0,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                Center(
+                  child: Text(
+                    message_body,
+                    style: const TextStyle(fontSize: 16.0),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
                 const SizedBox(height: 16.0),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(
-                      0xFFB0C8AE,
-                    ), // Explicit background color
-                    foregroundColor: Colors.white, // Explicit text color
+                    backgroundColor: buttonColor, // Button background color
+                    foregroundColor: textColor, // Button text color
                   ),
                   onPressed: () {
                     Navigator.pop(context);
