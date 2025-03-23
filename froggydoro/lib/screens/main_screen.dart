@@ -89,14 +89,33 @@ class _MainScreenState extends State<MainScreen>
           _totalSeconds--;
         });
       } else {
+        _stopTimer();
         if (!_isBreakTime) {
           setState(() {
             _sessionCount++;
           });
           _saveSessionCount();
-          _startBreakTime();
+          Notifications().showNotification(
+            id: 1,
+            title: 'Work time is over!',
+            body: 'Start your break now!',
+          );
+          _showSessionCompletePopup(
+            context,
+            'Your work session is complete. Start your break.',
+            _startBreakTime,
+          );
         } else {
-          _restartWorkTime();
+          Notifications().showNotification(
+            id: 2,
+            title: 'Break is over!',
+            body: 'Back to work!',
+          );
+          _showSessionCompletePopup(
+            context,
+            'Your break is over. Start your work session.',
+            _restartWorkTime,
+          );
         }
       }
     });
@@ -107,12 +126,7 @@ class _MainScreenState extends State<MainScreen>
       _isBreakTime = true;
       _totalSeconds = _breakMinutes * 60 + _breakSeconds;
     });
-
-    Notifications().showNotification(
-      id: 1,
-      title: 'Work time is over!',
-      body: 'Start your break now!',
-    );
+    _startTimer();
   }
 
   void _restartWorkTime() {
@@ -120,13 +134,6 @@ class _MainScreenState extends State<MainScreen>
       _isBreakTime = false;
       _totalSeconds = _workMinutes * 60 + _workSeconds;
     });
-
-    Notifications().showNotification(
-      id: 2,
-      title: 'Break is over!',
-      body: 'Back to work!',
-    );
-
     _startTimer();
   }
 
@@ -172,6 +179,53 @@ class _MainScreenState extends State<MainScreen>
     });
   }
 
+  void _showSessionCompletePopup(
+    BuildContext context,
+    String message,
+    VoidCallback onPressed,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Container(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(message, style: const TextStyle(fontSize: 18.0)),
+                const SizedBox(height: 16.0),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(
+                      0xFFB0C8AE,
+                    ), // Explicit background color
+                    foregroundColor: Colors.white, // Explicit text color
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    onPressed();
+                  },
+                  child: const Text('Start'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _setTestDurations() {
+    setState(() {
+      _workMinutes = 0;
+      _workSeconds = 10;
+      _breakMinutes = 0;
+      _breakSeconds = 5;
+      _totalSeconds = _workMinutes * 60 + _workSeconds;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
@@ -204,7 +258,7 @@ class _MainScreenState extends State<MainScreen>
             Center(
               child: Column(
                 children: [
-                  Spacer(flex: 1),
+                  const Spacer(flex: 1),
                   Text(
                     _isBreakTime ? "Break Time" : "Work Time",
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -221,20 +275,20 @@ class _MainScreenState extends State<MainScreen>
                       fontSize: screenWidth * 0.045,
                     ),
                   ),
-                  Spacer(flex: 1),
+                  const Spacer(flex: 1),
                   Image.asset(
                     'assets/default_froggy_transparent.png',
                     height: screenHeight * 0.3,
                   ),
-                  Spacer(flex: 1),
+                  const Spacer(flex: 1),
                   Text(
                     _formatTime(_totalSeconds),
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.bold,
-                      fontSize: screenWidth * 0.12,
+                      fontSize: screenWidth * 0.15,
                     ),
                   ),
-                  Spacer(flex: 1),
+                  const Spacer(flex: 1),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -254,7 +308,12 @@ class _MainScreenState extends State<MainScreen>
                       ),
                     ],
                   ),
-                  Spacer(flex: 1),
+                  const SizedBox(width: 10),
+                  ElevatedButton(
+                    onPressed: _setTestDurations,
+                    child: const Text('Test Durations'),
+                  ),
+                  const Spacer(flex: 1),
                 ],
               ),
             ),
