@@ -86,13 +86,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 Future<void> _loadThemeMode() async {
   final prefs = await SharedPreferences.getInstance();
   final themeModeString = prefs.getString('themeMode') ?? 'system';
-  
+
   setState(() {
     _themeMode = _getThemeModeFromString(themeModeString);
-    selectedTheme = themeOptions.keys.firstWhere(
-      (key) => themeOptions[key] == themeModeString, 
-      orElse: () => 'Follow System' // Default
-    );
+    selectedTheme = themeOptions.entries
+        .firstWhere((entry) => entry.value['value'] == themeModeString,
+            orElse: () => themeOptions.entries.last)
+        .key;
   });
 }
 
