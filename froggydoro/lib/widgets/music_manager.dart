@@ -14,7 +14,9 @@ class AudioManager{
 
   Future<void> playMusic([String? newSong]) async {
     newSong ??= await SettingsScreen.getAmbience();
-
+    if(newSong == "None" || _currentSong == "None"){
+      return; 
+    }
     _currentSong = await newSong.toLowerCase();
 
     await _audioPlayer.stop();

@@ -312,11 +312,11 @@ Future<void> _saveAmbience(String ambience) async{
 Future<void> _loadAmbience() async{
   final prefs = await SharedPreferences.getInstance();
   setState((){
-    selectedAmbience = prefs.getString(ambienceKey) ?? 'bonfire';
+    selectedAmbience = prefs.getString(ambienceKey) ?? 'None';
   });
 }
 
-String selectedAmbience = 'Bonfire';
+String selectedAmbience = 'None';
   
 Widget buildChangeAmbienceSetting() {
   return Column(
@@ -344,7 +344,7 @@ Widget buildChangeAmbienceSetting() {
                   padding: const EdgeInsets.all(10),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
-                    children: ["Bonfire", "Chirping", "Rain", "River"]
+                    children: ["None", "Bonfire", "Chirping", "Rain", "River"]
                         .map((String value) => ListTile(
                               title: Text(value),
                               onTap: () async {

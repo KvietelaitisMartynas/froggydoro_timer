@@ -80,8 +80,10 @@ class _MainScreenState extends State<MainScreen>
   void _startTimer() {
     if (_isRunning || (_workMinutes == 0 && _workSeconds == 0)) return;
 
-    AudioManager().playMusic();
-
+    if(!_isBreakTime){
+      AudioManager().playMusic();
+    }
+    
     setState(() {
       _isRunning = true;
     });
@@ -127,7 +129,7 @@ class _MainScreenState extends State<MainScreen>
   }
 
   void _startBreakTime() {
-    AudioManager().fadeOutMusic();
+    AudioManager().stopMusic();
     setState(() {
       _isBreakTime = true;
       _totalSeconds = _breakMinutes * 60 + _breakSeconds;
