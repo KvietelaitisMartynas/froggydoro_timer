@@ -39,7 +39,7 @@ class _MainScreenState extends State<MainScreen>
   int _totalSeconds = 0;
   bool _isBreakTime = false;
   Timer? _timer;
-  bool isRunning = false;
+  bool _isRunning = false;
   int _sessionCount = 0;
 
   int getSeconds() => _totalSeconds;
@@ -159,7 +159,7 @@ class _MainScreenState extends State<MainScreen>
     final endTime = startTime.add(Duration(seconds: _totalSeconds));
 
     setState(() {
-      isRunning = true;
+      _isRunning = true;
     });
 
     // Save the start time and initial remaining time
@@ -211,7 +211,7 @@ class _MainScreenState extends State<MainScreen>
     final prefs = await SharedPreferences.getInstance();
 
     setState(() {
-      isRunning = false;
+      _isRunning = false;
     });
 
     // Save the updated timer state
