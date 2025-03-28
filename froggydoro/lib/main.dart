@@ -3,6 +3,7 @@ import 'package:froggydoro/notifications.dart';
 import 'package:froggydoro/screens/main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest.dart' as tz;
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -10,7 +11,11 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialize flutter_local_notifications
   await Notifications().init();
+
+  // Initialize timezone data for scheduling notifications
+  tz.initializeTimeZones();
 
   runApp(const MyApp());
 }
@@ -86,25 +91,24 @@ class _MyAppState extends State<MyApp> {
         ),
         brightness: Brightness.light,
         useMaterial3: true,
-        scaffoldBackgroundColor: Color(
+        scaffoldBackgroundColor: const Color(
           0xFFF1F3E5,
         ), // Light mode background color
-        appBarTheme: AppBarTheme(
+        appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xFFF1F3E5),
           foregroundColor: Color(0xFF586F51), // Match the background
         ),
-        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
           backgroundColor: Color(0xFFF1F3E5),
           selectedItemColor: Color(0xFF586F51),
           unselectedItemColor: Color(0xFFB0C8AE),
         ),
-        textTheme: TextTheme(
+        textTheme: const TextTheme(
           bodyLarge: TextStyle(
             color: Color(0xFF586F51),
           ), // Light theme text color
         ),
       ),
-
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.green,
@@ -112,24 +116,23 @@ class _MyAppState extends State<MyApp> {
         ),
         brightness: Brightness.dark,
         useMaterial3: true,
-        scaffoldBackgroundColor: Color(
+        scaffoldBackgroundColor: const Color(
           0xFF3F5738,
         ), // Dark mode background color
-        appBarTheme: AppBarTheme(
+        appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xFF3F5738),
           foregroundColor: Color(0xFFB0C8AE),
         ),
-        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
           backgroundColor: Color(0xFF3F5738),
           selectedItemColor: Color(0xFFB0C8AE),
           unselectedItemColor: Color(0xFF63805C),
         ),
-        textTheme: TextTheme(
+        textTheme: const TextTheme(
           bodyLarge: TextStyle(
             color: Color(0xFFB0C8AE),
           ), // Dark theme text color
         ),
-        //scaffoldBackgroundColor: const Color.fromARGB(255, 19, 19, 19),
       ),
       themeMode: _themeMode,
       home: MainScreen(onThemeModeChanged: _onThemeModeChanged),
