@@ -36,18 +36,13 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
   }
 
   void saveTime() {
-    widget.updateTimer(
-      _workMinutes,
-      0,
-      _breakMinutes,
-      0,
-    );
+    widget.updateTimer(_workMinutes, 0, _breakMinutes, 0);
     _saveTimeSettings();
   }
 
   void addWorkTime() {
     setState(() {
-      if (_workMinutes < 60){
+      if (_workMinutes < 60) {
         _workMinutes += 5;
       }
     });
@@ -63,7 +58,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
 
   void addBreakTime() {
     setState(() {
-      if (_breakMinutes < 30){
+      if (_breakMinutes < 30) {
         _breakMinutes += 5;
       }
     });
@@ -80,31 +75,33 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Set Time')),
+      appBar: AppBar(
+        title: const Text(
+          'Set Time',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
             TimeStep(
               label: "Work Time",
-              value: _workMinutes, 
-              onIncrement: addWorkTime, 
+              value: _workMinutes,
+              onIncrement: addWorkTime,
               onDecrement: subtractWorkTime,
               unit: 'min',
             ),
             const SizedBox(height: 20),
             TimeStep(
               label: "Break Time",
-              value: _breakMinutes, 
-              onIncrement: addBreakTime, 
+              value: _breakMinutes,
+              onIncrement: addBreakTime,
               onDecrement: subtractBreakTime,
               unit: 'min',
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: saveTime,
-              child: const Text("Set"),
-            ),
+            ElevatedButton(onPressed: saveTime, child: const Text("Set")),
           ],
         ),
       ),

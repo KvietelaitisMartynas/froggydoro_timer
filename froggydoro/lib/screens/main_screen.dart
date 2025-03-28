@@ -11,11 +11,11 @@ class MainScreen extends StatefulWidget {
   final ValueChanged<ThemeMode> onThemeModeChanged;
   final Notifications notifications;
 
-  MainScreen({
-    Key? key,
+  const MainScreen({
+    super.key,
     required this.onThemeModeChanged,
     required this.notifications,
-  }) : super(key: key);
+  });
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -105,7 +105,7 @@ class _MainScreenState extends State<MainScreen>
       final startTimeString = prefs.getString('startTime');
       final remainingTime = prefs.getInt('remainingTime') ?? 0;
 
-      if (startTimeString != null) {
+      if (startTimeString != null && _isRunning) {
         final startTime = DateTime.parse(startTimeString);
         final elapsedSeconds = DateTime.now().difference(startTime).inSeconds;
 
@@ -116,6 +116,9 @@ class _MainScreenState extends State<MainScreen>
           _isRunning =
               updatedRemainingTime > 0 && (prefs.getBool('isRunning') ?? false);
         });
+      } else {
+        _totalSeconds = remainingTime;
+        _isRunning = false;
       }
     } catch (e) {
       print('Error loading timer state: $e');
