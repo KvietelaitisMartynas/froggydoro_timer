@@ -2,31 +2,22 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
 class Notifications {
-  static final Notifications _instance = Notifications._internal();
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
 
-  factory Notifications() {
-    return _instance;
-  }
-
-  Notifications._internal();
-
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  Notifications({FlutterLocalNotificationsPlugin? plugin})
+    : flutterLocalNotificationsPlugin =
+          plugin ?? FlutterLocalNotificationsPlugin();
 
   Future<void> init() async {
-    // Android initialization
     const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@drawable/frog_notif_icon');
+        AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    // iOS initialization
     const DarwinInitializationSettings initializationSettingsIOS =
-        DarwinInitializationSettings(
-          requestAlertPermission: true,
-          requestBadgePermission: true,
-          requestSoundPermission: true,
-        );
+        DarwinInitializationSettings();
 
     const InitializationSettings initializationSettings =
         InitializationSettings(
@@ -35,6 +26,9 @@ class Notifications {
         );
 
     await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+    // Initialize timezone data
+    tz.initializeTimeZones();
 
     await _requestPermissions();
 
@@ -104,5 +98,36 @@ class Notifications {
       body,
       platformChannelSpecifics,
     );
+  }
+
+  Future<void> scheduleNotification({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime scheduledTime,
+  }) async {
+    await flutterLocalNotificationsPlugin.zonedSchedule(
+      id,
+      title,
+      body,
+      tz.TZDateTime.from(scheduledTime, tz.local),
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'froggydoro_channel',
+          'Froggydoro Notifications',
+          channelDescription: 'Notifications for Froggydoro timer',
+          importance: Importance.max,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+    );
+  }
+
+  Future<void> cancelNotification(int id) async {
+    await flutterLocalNotificationsPlugin.cancel(id);
   }
 }

@@ -11,6 +11,14 @@ import flutter_local_notifications
         // Set the UNUserNotificationCenter delegate
         UNUserNotificationCenter.current().delegate = self
 
+        // Request notification permissions
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+            if let error = error {
+                print("Error requesting notification permissions: \(error)")
+            }
+            print("Notification permissions granted: \(granted)")
+        }
+
         // Register plugins
         GeneratedPluginRegistrant.register(with: self)
 
@@ -18,7 +26,6 @@ import flutter_local_notifications
     }
 }
 
-// Remove redundant conformance
 // MARK: - UNUserNotificationCenterDelegate
 extension AppDelegate {
     override func userNotificationCenter(
@@ -26,10 +33,22 @@ extension AppDelegate {
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
+        // Handle notifications when the app is in the foreground
         if #available(iOS 14.0, *) {
             completionHandler([.banner, .sound])
         } else {
             completionHandler([.alert, .sound])
         }
+    }
+
+    override func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        // Handle the notification when the app is in the background or closed
+        print("Notification received: \(response.notification.request.content.userInfo)")
+
+        completionHandler()
     }
 }
