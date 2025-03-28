@@ -11,10 +11,18 @@ class MainScreen extends StatefulWidget {
   const MainScreen({super.key, required this.onThemeModeChanged});
 
   @override
-  State<MainScreen> createState() => _MainScreenState();
+  State<MainScreen> createState() => MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen>
+class Counter {
+  int value = 0;
+
+  void increment() => value++;
+
+  void decrement() => value--;
+}
+
+class MainScreenState extends State<MainScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   int _selectedIndex = 0;
@@ -26,8 +34,10 @@ class _MainScreenState extends State<MainScreen>
   int _totalSeconds = 0;
   bool _isBreakTime = false;
   Timer? _timer;
-  bool _isRunning = false;
+  bool isRunning = false;
   int _sessionCount = 0;
+
+  int getSeconds() => _totalSeconds;
 
   @override
   void initState() {
@@ -77,13 +87,17 @@ class _MainScreenState extends State<MainScreen>
     _resetTimer();
   }
 
+  void updateTimer(workMinutes, workSeconds, breakMinutes, breakSeconds) {
+    _updateTimer(workMinutes, workSeconds, breakMinutes, breakSeconds);
+  }
+
   void _startTimer() {
-    if (_isRunning || (_workMinutes == 0 && _workSeconds == 0)) return;
+    if (isRunning || (_workMinutes == 0 && _workSeconds == 0)) return;
 
     AudioManager().playMusic();
 
     setState(() {
-      _isRunning = true;
+      isRunning = true;
     });
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -148,7 +162,7 @@ class _MainScreenState extends State<MainScreen>
     AudioManager().pauseMusic();
     _timer?.cancel();
     setState(() {
-      _isRunning = false;
+      isRunning = false;
     });
   }
 
@@ -188,6 +202,11 @@ class _MainScreenState extends State<MainScreen>
       _breakSeconds = prefs.getInt('breakSeconds') ?? 0;
       _updateTimer(_workMinutes, _workSeconds, _breakMinutes, _breakSeconds);
     });
+  }
+
+  // For test
+  void loadTime() {
+    _loadTimeSettings();
   }
 
   void _showSessionCompletePopup(
@@ -244,8 +263,8 @@ class _MainScreenState extends State<MainScreen>
                 const SizedBox(height: 16.0),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: buttonColor, // Button background color
-                    foregroundColor: textColor, // Button text color
+                    backgroundColor: buttonColor, 
+                    foregroundColor: textColor, 
                   ),
                   onPressed: () {
                     Navigator.pop(context);
