@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:froggydoro/screens/settings_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:froggydoro/notifications.dart';
@@ -12,24 +14,19 @@ class MainScreen extends StatefulWidget {
   MainScreen({
     Key? key,
     required this.onThemeModeChanged,
-    Notifications? notifications,
-  }) : notifications = notifications ?? Notifications(),
-       super(key: key);
+    required this.notifications,
+  }) : super(key: key);
 
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
 
-class Counter {
-  int value = 0;
-
-  void increment() => value++;
-
-  void decrement() => value--;
-}
-
 class _MainScreenState extends State<MainScreen>
     with WidgetsBindingObserver, SingleTickerProviderStateMixin {
+  static const MethodChannel _channel = MethodChannel(
+    'com.example.froggydoro/exact_alarm',
+  );
+
   late TabController _tabController;
   int _selectedIndex = 0;
   int _workMinutes = 25;
@@ -42,7 +39,7 @@ class _MainScreenState extends State<MainScreen>
   bool _isRunning = false;
   int _sessionCount = 0;
 
-  int getSeconds() => _totalSeconds;
+  final Set<int> _scheduledNotifications = {}; // Track scheduled notifications
 
   @override
   void initState() {
@@ -145,14 +142,35 @@ class _MainScreenState extends State<MainScreen>
     _resetTimer();
   }
 
-  void updateTimer(workMinutes, workSeconds, breakMinutes, breakSeconds) {
-    _updateTimer(workMinutes, workSeconds, breakMinutes, breakSeconds);
+  Future<bool> isExactAlarmPermissionGranted() async {
+    if (Platform.isAndroid) {
+      try {
+        final bool isGranted = await _channel.invokeMethod(
+          'isExactAlarmPermissionGranted',
+        );
+        return isGranted;
+      } on PlatformException catch (e) {
+        print('Failed to check exact alarm permission: ${e.message}');
+      }
+    }
+    return false;
+  }
+
+  Future<void> requestExactAlarmPermission() async {
+    if (Platform.isAndroid) {
+      try {
+        final isGranted = await isExactAlarmPermissionGranted();
+        if (!isGranted) {
+          await _channel.invokeMethod('requestExactAlarmPermission');
+        }
+      } on PlatformException catch (e) {
+        print('Failed to request exact alarm permission: ${e.message}');
+      }
+    }
   }
 
   void _startTimer() async {
     if (_isRunning || (_workMinutes == 0 && _workSeconds == 0)) return;
-
-    AudioManager().playMusic();
 
     final prefs = await SharedPreferences.getInstance();
     final startTime = DateTime.now();
@@ -162,20 +180,28 @@ class _MainScreenState extends State<MainScreen>
       _isRunning = true;
     });
 
-    // Save the start time and initial remaining time
     await prefs.setString('startTime', startTime.toIso8601String());
     await prefs.setInt('remainingTime', _totalSeconds);
     await prefs.setBool('isRunning', true);
 
-    // Schedule a notification for when the timer ends
-    await widget.notifications.scheduleNotification(
-      id: 1,
-      title: _isBreakTime ? 'Break is over!' : 'Work time is over!',
-      body: _isBreakTime ? 'Back to work!' : 'Start your break now!',
-      scheduledTime: endTime,
-    );
+    if (Platform.isIOS) {
+      // Schedule notifications only on iOS
+      try {
+        print('Scheduling notification for iOS...');
+        await widget.notifications.scheduleNotification(
+          id: 1,
+          title: _isBreakTime ? 'Break is over!' : 'Work time is over!',
+          body: _isBreakTime ? 'Back to work!' : 'Start your break now!',
+          scheduledTime: endTime,
+        );
+        print('Notification scheduled successfully.');
+      } catch (e) {
+        print('Error scheduling notification: $e');
+      }
+    } else {
+      print('Skipping notification scheduling on Android.');
+    }
 
-    // Start the timer logic
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_totalSeconds > 0) {
         setState(() {
@@ -187,25 +213,8 @@ class _MainScreenState extends State<MainScreen>
     });
   }
 
-  void _startBreakTime() {
-    AudioManager().fadeOutMusic();
-    setState(() {
-      _isBreakTime = true;
-      _totalSeconds = _breakMinutes * 60 + _breakSeconds;
-    });
-    _startTimer();
-  }
-
-  void _restartWorkTime() {
-    AudioManager().playMusic();
-    setState(() {
-      _isBreakTime = false;
-      _totalSeconds = _workMinutes * 60 + _workSeconds;
-    });
-    _startTimer();
-  }
-
   void _stopTimer() async {
+    print('Stopping timer...');
     AudioManager().pauseMusic();
     _timer?.cancel();
     final prefs = await SharedPreferences.getInstance();
@@ -214,23 +223,44 @@ class _MainScreenState extends State<MainScreen>
       _isRunning = false;
     });
 
-    // Save the updated timer state
     await prefs.setBool('isRunning', false);
     await prefs.setInt('remainingTime', _totalSeconds);
 
-    // Cancel the scheduled notification
-    await widget.notifications.cancelNotification(1);
+    if (Platform.isIOS) {
+      // Cancel notifications only on iOS
+      try {
+        if (_scheduledNotifications.contains(1)) {
+          print('Attempting to cancel notification with ID: 1');
+          await widget.notifications.cancelNotification(1);
+          print('Notification canceled successfully.');
+          _scheduledNotifications.remove(1);
+        } else {
+          print('Notification with ID 1 does not exist.');
+        }
+      } catch (e) {
+        print('Error canceling notification: $e');
+      }
+    } else if (Platform.isAndroid) {
+      // Show an immediate notification on Android
+      try {
+        print('Showing notification for Android...');
+        await widget.notifications.showNotification(
+          id: 2,
+          title: _isBreakTime ? 'Work time!' : 'Break time!',
+          body:
+              _isBreakTime
+                  ? 'Your break has ended!'
+                  : 'You can finish your work!',
+        );
+        print('Notification displayed successfully on Android.');
+      } catch (e) {
+        print('Error displaying notification on Android: $e');
+      }
+    }
 
-    // Show popup and notification when the timer ends
     if (_totalSeconds == 0) {
       if (_isBreakTime) {
-        // Break time ended
         _sessionCount++;
-        /* widget.notifications.showNotification(
-          id: 2,
-          title: 'Break is over!',
-          body: 'Back to work!',
-        ); */
         _showSessionCompletePopup(
           context,
           'Your break is over.',
@@ -238,12 +268,6 @@ class _MainScreenState extends State<MainScreen>
           _restartWorkTime,
         );
       } else {
-        // Work time ended
-        /*         widget.notifications.showNotification(
-          id: 1,
-          title: 'Work time is over!',
-          body: 'Start your break now!',
-        ); */
         _showSessionCompletePopup(
           context,
           'Your work session is complete.',
@@ -265,38 +289,31 @@ class _MainScreenState extends State<MainScreen>
     _saveSessionCount();
   }
 
+  void _startBreakTime() {
+    setState(() {
+      _isBreakTime = true;
+      _totalSeconds = _breakMinutes * 60 + _breakSeconds;
+    });
+    _startTimer();
+  }
+
+  void _restartWorkTime() {
+    setState(() {
+      _isBreakTime = false;
+      _totalSeconds = _workMinutes * 60 + _workSeconds;
+    });
+    _startTimer();
+  }
+
+  void _saveSessionCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('sessionCount', _sessionCount);
+  }
+
   String _formatTime(int totalSeconds) {
     int minutes = totalSeconds ~/ 60;
     int seconds = totalSeconds % 60;
     return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-  }
-
-  void _loadSessionCount() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _sessionCount = prefs.getInt('sessionCount') ?? 0;
-    });
-  }
-
-  void _saveSessionCount() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('sessionCount', _sessionCount);
-  }
-
-  void _loadTimeSettings() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _workMinutes = prefs.getInt('workMinutes') ?? 25;
-      _workSeconds = 0;
-      _breakMinutes = prefs.getInt('breakMinutes') ?? 5;
-      _breakSeconds = prefs.getInt('breakSeconds') ?? 0;
-      _updateTimer(_workMinutes, _workSeconds, _breakMinutes, _breakSeconds);
-    });
-  }
-
-  // For test
-  void loadTime() {
-    _loadTimeSettings();
   }
 
   void _showSessionCompletePopup(
@@ -319,18 +336,17 @@ class _MainScreenState extends State<MainScreen>
 
     showModalBottomSheet(
       context: context,
-      isDismissible: false, // Prevent dismissal by tapping outside
-      enableDrag: false, // Prevent dismissal by dragging
+      isDismissible: false,
+      enableDrag: false,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
       ),
       builder: (BuildContext context) {
-        final screenWidth =
-            MediaQuery.of(context).size.width; // Get screen width
+        final screenWidth = MediaQuery.of(context).size.width;
 
         return SafeArea(
           child: Container(
-            width: screenWidth, // Set the width to match the screen width
+            width: screenWidth,
             decoration: BoxDecoration(
               color: backgroundColor,
               borderRadius: const BorderRadius.vertical(
@@ -363,7 +379,7 @@ class _MainScreenState extends State<MainScreen>
                     foregroundColor: textColor,
                   ),
                   onPressed: () {
-                    Navigator.pop(context); // Close the popup
+                    Navigator.pop(context);
                     onPressed();
                   },
                   child: const Text('Start'),
@@ -374,16 +390,6 @@ class _MainScreenState extends State<MainScreen>
         );
       },
     );
-  }
-
-  void _setTestDurations() {
-    setState(() {
-      _workMinutes = 0;
-      _workSeconds = 10;
-      _breakMinutes = 0;
-      _breakSeconds = 5;
-      _totalSeconds = _workMinutes * 60 + _workSeconds;
-    });
   }
 
   @override
@@ -405,72 +411,92 @@ class _MainScreenState extends State<MainScreen>
           ),
         ),
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(height: screenHeight * 0.02),
-              Text(
-                _isBreakTime ? "Break Time" : "Work Time",
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w300,
-                  fontStyle: FontStyle.italic,
-                  fontSize: screenWidth * 0.06,
-                ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: 16.0,
+                horizontal: 8.0,
               ),
-              SizedBox(height: screenHeight * 0.02),
-              Text(
-                "Work sessions completed: $_sessionCount",
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: screenWidth * 0.045,
-                ),
-              ),
-              SizedBox(height: screenHeight * 0.02),
-              Image.asset(
-                'assets/default_froggy_transparent.png',
-                height: screenHeight * 0.3,
-              ),
-              SizedBox(height: screenHeight * 0.02),
-              Text(
-                _formatTime(_totalSeconds),
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: screenWidth * 0.15,
-                ),
-              ),
-              SizedBox(height: screenHeight * 0.02),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  ElevatedButton(
-                    onPressed: _startTimer,
-                    child: const Text('Start'),
+                  SizedBox(height: screenHeight * 0.02),
+                  Text(
+                    _isBreakTime ? "Break Time" : "Work Time",
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w300,
+                      fontStyle: FontStyle.italic,
+                      fontSize: screenWidth * 0.06,
+                    ),
                   ),
-                  const SizedBox(width: 10),
-                  ElevatedButton(
-                    onPressed: _stopTimer,
-                    child: const Text('Stop'),
+                  SizedBox(height: screenHeight * 0.02),
+                  Text(
+                    "Work sessions completed: $_sessionCount",
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: screenWidth * 0.045,
+                    ),
                   ),
-                  const SizedBox(width: 10),
-                  ElevatedButton(
-                    onPressed: _resetTimer,
-                    child: const Text('Reset'),
+                  SizedBox(height: screenHeight * 0.02),
+                  Image.asset(
+                    'assets/default_froggy_transparent.png',
+                    height: screenHeight * 0.3,
                   ),
+                  SizedBox(height: screenHeight * 0.02),
+                  Text(
+                    _formatTime(_totalSeconds),
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: screenWidth * 0.15,
+                    ),
+                  ),
+                  SizedBox(height: screenHeight * 0.02),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        onPressed: _startTimer,
+                        child: const Text('Start'),
+                      ),
+                      const SizedBox(width: 10),
+                      ElevatedButton(
+                        onPressed: _stopTimer,
+                        child: const Text('Stop'),
+                      ),
+                      const SizedBox(width: 10),
+                      ElevatedButton(
+                        onPressed: _resetTimer,
+                        child: const Text('Reset'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _workMinutes = 0;
+                        _workSeconds = 10;
+                        _breakMinutes = 0;
+                        _breakSeconds = 5;
+                        _totalSeconds = _workMinutes * 60 + _workSeconds;
+                      });
+                    },
+                    child: const Text('Test Durations'),
+                  ),
+                  SizedBox(height: screenHeight * 0.02),
                 ],
               ),
-              const SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: _setTestDurations,
-                child: const Text('Test Durations'),
-              ),
-              SizedBox(height: screenHeight * 0.02),
-            ],
+            ),
           ),
-        ),
+          SettingsScreen(
+            updateTimer: _updateTimer,
+            onThemeModeChanged: widget.onThemeModeChanged,
+          ),
+        ],
       ),
       bottomNavigationBar: Theme(
         data: Theme.of(context).copyWith(

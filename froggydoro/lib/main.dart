@@ -11,17 +11,21 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize flutter_local_notifications
-  await Notifications().init();
-
-  // Initialize timezone data for scheduling notifications
+  // Initialize timezone data
   tz.initializeTimeZones();
+  print('Time zones initialized successfully.');
 
-  runApp(const MyApp());
+  // Initialize notifications
+  final notifications = Notifications();
+  await notifications.init();
+
+  runApp(MyApp(notifications: notifications));
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  final Notifications notifications;
+
+  const MyApp({super.key, required this.notifications});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -135,7 +139,10 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
       themeMode: _themeMode,
-      home: MainScreen(onThemeModeChanged: _onThemeModeChanged),
+      home: MainScreen(
+        onThemeModeChanged: _onThemeModeChanged,
+        notifications: widget.notifications,
+      ),
     );
   }
 }
