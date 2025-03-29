@@ -1,7 +1,7 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:froggydoro/screens/settings_screen.dart';
 
-class AudioManager{
+class AudioManager {
   static final AudioManager _instance = AudioManager._internal();
   factory AudioManager() => _instance;
 
@@ -14,10 +14,10 @@ class AudioManager{
 
   Future<void> playMusic([String? newSong]) async {
     newSong ??= await SettingsScreen.getAmbience();
-    if(newSong == "None" || _currentSong == "None"){
-      return; 
+    if (newSong == "None" || _currentSong == "None") {
+      return;
     }
-    _currentSong = await newSong.toLowerCase();
+    _currentSong = newSong.toLowerCase();
 
     await _audioPlayer.stop();
     await _audioPlayer.setReleaseMode(ReleaseMode.loop);

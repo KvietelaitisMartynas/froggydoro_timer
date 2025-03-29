@@ -175,6 +175,8 @@ class _MainScreenState extends State<MainScreen>
   void _startTimer() async {
     if (_isRunning || (_workMinutes == 0 && _workSeconds == 0)) return;
 
+    AudioManager().playMusic();
+
     final prefs = await SharedPreferences.getInstance();
     final startTime = DateTime.now();
     final endTime = startTime.add(Duration(seconds: _totalSeconds));
@@ -282,7 +284,7 @@ class _MainScreenState extends State<MainScreen>
   }
 
   void _resetTimer() {
-    AudioManager().stopMusic();
+    AudioManager().pauseMusic();
     _stopTimer();
     setState(() {
       _isBreakTime = false;
