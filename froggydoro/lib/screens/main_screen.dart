@@ -86,7 +86,7 @@ class _MainScreenState extends State<MainScreen>
       if (remainingSeconds > 0) {
         setState(() {
           _totalSeconds = remainingSeconds;
-          _stopTimer();
+          _stopTimer(isReset: false);
         });
       }
     }
@@ -213,12 +213,12 @@ class _MainScreenState extends State<MainScreen>
           _totalSeconds--;
         });
       } else {
-        _stopTimer();
+        _stopTimer(isReset: false);
       }
     });
   }
 
-  void _stopTimer() async {
+  void _stopTimer({bool isReset = false}) async {
     print('Stopping timer...');
     AudioManager().pauseMusic();
     _timer?.cancel();
@@ -245,8 +245,8 @@ class _MainScreenState extends State<MainScreen>
       } catch (e) {
         print('Error canceling notification: $e');
       }
-    } else if (Platform.isAndroid) {
-      // Show an immediate notification on Android
+    } else if (Platform.isAndroid && !isReset && _totalSeconds == 0) {
+      // Show an immediate notification on Android only if not resetting
       try {
         print('Showing notification for Android...');
         await widget.notifications.showNotification(
@@ -285,7 +285,7 @@ class _MainScreenState extends State<MainScreen>
 
   void _resetTimer() {
     AudioManager().pauseMusic();
-    _stopTimer();
+    _stopTimer(isReset: true);
     setState(() {
       _isBreakTime = false;
       _totalSeconds = _workMinutes * 60 + _workSeconds;
@@ -469,7 +469,7 @@ class _MainScreenState extends State<MainScreen>
                       ),
                       const SizedBox(width: 10),
                       ElevatedButton(
-                        onPressed: _stopTimer,
+                        onPressed: () => _stopTimer(isReset: true),
                         child: const Text('Stop'),
                       ),
                       const SizedBox(width: 10),
