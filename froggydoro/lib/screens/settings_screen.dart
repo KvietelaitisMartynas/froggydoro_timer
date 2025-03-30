@@ -28,7 +28,6 @@ class _DropdownMenu extends StatefulWidget {
   final ValueChanged<String?> onChanged;
 
   const _DropdownMenu({
-    super.key,
     required this.options,
     required this.initialValue,
     required this.onChanged,

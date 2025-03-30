@@ -13,7 +13,6 @@ void main() async {
 
   // Initialize timezone data
   tz.initializeTimeZones();
-  print('Time zones initialized successfully.');
 
   // Initialize notifications
   final notifications = Notifications();
@@ -48,11 +47,6 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  Future<void> _saveThemeMode(ThemeMode themeMode) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('themeMode', _getStringFromThemeMode(themeMode));
-  }
-
   ThemeMode _getThemeModeFromString(String themeMode) {
     switch (themeMode) {
       case 'light':
@@ -62,18 +56,6 @@ class _MyAppState extends State<MyApp> {
       case 'system':
       default:
         return ThemeMode.system;
-    }
-  }
-
-  String _getStringFromThemeMode(ThemeMode themeMode) {
-    switch (themeMode) {
-      case ThemeMode.light:
-        return 'light';
-      case ThemeMode.dark:
-        return 'dark';
-      case ThemeMode.system:
-      default:
-        return 'system';
     }
   }
 

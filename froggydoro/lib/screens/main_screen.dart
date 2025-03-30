@@ -192,7 +192,6 @@ class _MainScreenState extends State<MainScreen>
     if (Platform.isIOS) {
       // Schedule notifications only on iOS
       try {
-        print('Scheduling notification for iOS...');
         await widget.notifications.scheduleNotification(
           id: 1,
           title: _isBreakTime ? 'Break is over!' : 'Work time is over!',
@@ -200,12 +199,9 @@ class _MainScreenState extends State<MainScreen>
           scheduledTime: endTime,
         );
         _scheduledNotifications.add(1);
-        print('Notification scheduled successfully.');
       } catch (e) {
         print('Error scheduling notification: $e');
       }
-    } else {
-      print('Skipping notification scheduling on Android.');
     }
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -220,7 +216,6 @@ class _MainScreenState extends State<MainScreen>
   }
 
   void _stopTimer({bool isReset = false}) async {
-    print('Stopping timer...');
     AudioManager().pauseMusic();
     _timer?.cancel();
     final prefs = await SharedPreferences.getInstance();
@@ -236,12 +231,8 @@ class _MainScreenState extends State<MainScreen>
       // Cancel notifications only on iOS
       try {
         if (_scheduledNotifications.contains(1)) {
-          print('Attempting to cancel notification with ID: 1');
           await widget.notifications.cancelNotification(1);
-          print('Notification canceled successfully.');
           _scheduledNotifications.remove(1);
-        } else {
-          print('Notification with ID 1 does not exist.');
         }
       } catch (e) {
         print('Error canceling notification: $e');
@@ -249,7 +240,6 @@ class _MainScreenState extends State<MainScreen>
     } else if (Platform.isAndroid && !isReset && _totalSeconds == 0) {
       // Show an immediate notification on Android only if not resetting
       try {
-        print('Showing notification for Android...');
         await widget.notifications.showNotification(
           id: 2,
           title: _isBreakTime ? 'Work time!' : 'Break time!',
@@ -258,7 +248,6 @@ class _MainScreenState extends State<MainScreen>
                   ? 'Your break has ended!'
                   : 'You can finish your work!',
         );
-        print('Notification displayed successfully on Android.');
       } catch (e) {
         print('Error displaying notification on Android: $e');
       }
