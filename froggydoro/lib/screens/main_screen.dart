@@ -199,6 +199,7 @@ class _MainScreenState extends State<MainScreen>
           body: _isBreakTime ? 'Back to work!' : 'Start your break now!',
           scheduledTime: endTime,
         );
+        _scheduledNotifications.add(1);
         print('Notification scheduled successfully.');
       } catch (e) {
         print('Error scheduling notification: $e');
@@ -231,7 +232,7 @@ class _MainScreenState extends State<MainScreen>
     await prefs.setBool('isRunning', false);
     await prefs.setInt('remainingTime', _totalSeconds);
 
-    if (Platform.isIOS) {
+    if (Platform.isIOS && _totalSeconds != 0) {
       // Cancel notifications only on iOS
       try {
         if (_scheduledNotifications.contains(1)) {
@@ -310,6 +311,17 @@ class _MainScreenState extends State<MainScreen>
     _startTimer();
   }
 
+  void _pauseTimer() {
+    setState(() {
+      _isRunning = false;
+      if (_isBreakTime) {
+        _totalSeconds = _breakMinutes * 60 + _breakSeconds;
+      } else {
+        _totalSeconds = _workMinutes * 60 + _workSeconds;
+      }
+    });
+  }
+
   void _saveSessionCount() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('sessionCount', _sessionCount);
@@ -378,16 +390,34 @@ class _MainScreenState extends State<MainScreen>
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16.0),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: buttonColor,
-                    foregroundColor: textColor,
-                  ),
-                  onPressed: () {
-                    Navigator.pop(context);
-                    onPressed();
-                  },
-                  child: const Text('Start'),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: buttonColor,
+                        foregroundColor: textColor,
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        onPressed();
+                      },
+                      child: const Text('Start'),
+                    ),
+                    const SizedBox(width: 10),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: buttonColor,
+                        foregroundColor: textColor,
+                      ),
+                      onPressed: () {
+                        _isBreakTime = !_isBreakTime;
+                        _pauseTimer();
+                        Navigator.pop(context);
+                      },
+                      child: const Text('Pause'),
+                    ),
+                  ],
                 ),
               ],
             ),

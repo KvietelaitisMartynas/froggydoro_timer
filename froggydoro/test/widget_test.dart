@@ -5,7 +5,12 @@ import 'package:mockito/mockito.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MockUpdateTimer extends Mock {
-  void call(int workMinutes, int workSeconds, int breakMinutes, int breakSeconds);
+  void call(
+    int workMinutes,
+    int workSeconds,
+    int breakMinutes,
+    int breakSeconds,
+  );
 }
 
 void main() {
@@ -16,7 +21,9 @@ void main() {
       mockUpdateTimer = MockUpdateTimer();
     });
 
-    testWidgets('Load and displays time from shared preferences', (tester) async {
+    testWidgets('Load and displays time from shared preferences', (
+      tester,
+    ) async {
       SharedPreferences.setMockInitialValues({
         'workMinutes': 25,
         'breakMinutes': 5,
@@ -24,7 +31,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: TimeSettingsScreen(updateTimer: mockUpdateTimer),
+          home: TimeSettingsScreen(updateTimer: mockUpdateTimer.call),
         ),
       );
 
@@ -42,7 +49,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: TimeSettingsScreen(updateTimer: mockUpdateTimer),
+          home: TimeSettingsScreen(updateTimer: mockUpdateTimer.call),
         ),
       );
 
@@ -60,7 +67,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: TimeSettingsScreen(updateTimer: mockUpdateTimer),
+          home: TimeSettingsScreen(updateTimer: mockUpdateTimer.call),
         ),
       );
 
@@ -78,7 +85,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: TimeSettingsScreen(updateTimer: mockUpdateTimer),
+          home: TimeSettingsScreen(updateTimer: mockUpdateTimer.call),
         ),
       );
 
@@ -96,7 +103,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: TimeSettingsScreen(updateTimer: mockUpdateTimer),
+          home: TimeSettingsScreen(updateTimer: mockUpdateTimer.call),
         ),
       );
 
@@ -114,7 +121,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: TimeSettingsScreen(updateTimer: mockUpdateTimer),
+          home: TimeSettingsScreen(updateTimer: mockUpdateTimer.call),
         ),
       );
 
@@ -125,4 +132,3 @@ void main() {
     });
   });
 }
-

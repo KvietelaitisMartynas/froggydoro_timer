@@ -78,7 +78,12 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
       appBar: AppBar(
         title: const Text(
           'Set Time',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontWeight: FontWeight.w600,
+            fontSize: 24,
+            letterSpacing: -0.24,
+          ),
         ),
       ),
       body: Padding(
