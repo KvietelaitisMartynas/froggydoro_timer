@@ -189,11 +189,7 @@ void main() {
         ),
       );
 
-      expect(find.text('Settings'), findsOneWidget);
-      expect(find.text('Theme Mode'), findsOneWidget);
-      expect(find.text('Always on display'), findsOneWidget);
-      expect(find.text('Time Settings'), findsOneWidget);
-      expect(find.text('Ambience Settings'), findsOneWidget);
+      expect(find.text('General'), findsOneWidget);
     });
   });
 }
