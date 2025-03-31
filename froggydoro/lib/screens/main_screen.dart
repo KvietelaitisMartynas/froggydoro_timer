@@ -28,10 +28,11 @@ class _MainScreenState extends State<MainScreen>
   );
 
   late TabController _tabController;
+
   int _selectedIndex = 0;
-  int _workMinutes = 25;
+  late int _workMinutes;
   int _workSeconds = 0;
-  int _breakMinutes = 5;
+  late int _breakMinutes;
   int _breakSeconds = 0;
   int _totalSeconds = 0;
   bool _isBreakTime = false;
@@ -49,8 +50,19 @@ class _MainScreenState extends State<MainScreen>
     // Initialize the TabController with 2 tabs and provide the vsync from the mixin.
     _tabController = TabController(length: 2, vsync: this);
 
+    _loadPreferances();
+
     // Load the timer state after initializing the TabController
     _loadTimerState();
+  }
+
+  void _loadPreferances() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    setState(() {
+      _workMinutes = prefs.getInt('workMinutes') ?? 25;
+      _breakMinutes = prefs.getInt('breakMinutes') ?? 5;
+    });
   }
 
   @override
