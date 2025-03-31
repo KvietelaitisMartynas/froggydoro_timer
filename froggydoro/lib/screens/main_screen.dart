@@ -27,35 +27,12 @@ class _MainScreenState extends State<MainScreen>
     'com.example.froggydoro/exact_alarm',
   );
 
-  int _workMinutes = 25;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-
-    // Initialize the TabController with 2 tabs and provide the vsync from the mixin.
-    _tabController = TabController(length: 2, vsync: this);
-
-    // Load the timer state after initializing the TabController
-    _loadTimerState();
-
-    // Fetch workMinutes asynchronously
-    _initializeWorkMinutes();
-  }
-
-  Future<void> _initializeWorkMinutes() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _workMinutes = prefs.getInt('workMinutes') ?? 25;
-    });
-  }
-
   late TabController _tabController;
+
   int _selectedIndex = 0;
-  int _workMinutes = 25;
+  late int _workMinutes;
   int _workSeconds = 0;
-  int _breakMinutes = 5;
+  late int _breakMinutes;
   int _breakSeconds = 0;
   int _totalSeconds = 0;
   bool _isBreakTime = false;
@@ -73,8 +50,19 @@ class _MainScreenState extends State<MainScreen>
     // Initialize the TabController with 2 tabs and provide the vsync from the mixin.
     _tabController = TabController(length: 2, vsync: this);
 
+    _loadPreferances();
+
     // Load the timer state after initializing the TabController
     _loadTimerState();
+  }
+
+  void _loadPreferances() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    setState(() {
+      _workMinutes = prefs.getInt('workMinutes') ?? 25;
+      _breakMinutes = prefs.getInt('breakMinutes') ?? 5;
+    });
   }
 
   @override
