@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:froggydoro/screens/settings_screen.dart';
 import 'package:froggydoro/screens/time_settings_screen.dart';
 import 'package:mockito/mockito.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -164,6 +165,35 @@ void main() {
       );
 
       expect(find.text('Work Time'), findsOneWidget);
+    });
+  });
+
+  group('Settings Screen', () {
+    late final MockThemeCall mockThemeCall;
+    late final MockUpdateTimer mockUpdateTimer;
+
+    setUp(() {
+      mockThemeCall = MockThemeCall();
+      mockUpdateTimer = MockUpdateTimer();
+    });
+
+    testWidgets('Tests if all settings are present', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1080, 1920));
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SettingsScreen(
+            updateTimer: mockUpdateTimer.call,
+            onThemeModeChanged: mockThemeCall.call,
+          ),
+        ),
+      );
+
+      expect(find.text('Settings'), findsOneWidget);
+      expect(find.text('Theme Mode'), findsOneWidget);
+      expect(find.text('Always on display'), findsOneWidget);
+      expect(find.text('Time Settings'), findsOneWidget);
+      expect(find.text('Ambience Settings'), findsOneWidget);
     });
   });
 }
