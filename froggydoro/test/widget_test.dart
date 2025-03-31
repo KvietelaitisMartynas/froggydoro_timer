@@ -143,8 +143,8 @@ void main() {
   });
 
   group('MainScreen', () {
-    late final MockThemeCall mockThemeCall;
-    late final MockNotificationsCall mockNotificationsCall;
+    late MockThemeCall mockThemeCall;
+    late MockNotificationsCall mockNotificationsCall;
 
     setUp(() {
       mockThemeCall = MockThemeCall();
@@ -164,6 +164,58 @@ void main() {
       );
 
       expect(find.text('Work Time'), findsOneWidget);
+    });
+
+    testWidgets('Timer moves one second', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1080, 1920));
+
+      SharedPreferences.setMockInitialValues({
+        'workMinutes': 25,
+        'breakMinutes': 5,
+      });
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MainScreen(
+            onThemeModeChanged: mockThemeCall.call,
+            notifications: mockNotificationsCall,
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Reset'));
+      await tester.tap(find.text('Start'));
+      await tester.pump(const Duration(seconds: 1));
+      await tester.tap(find.text('Stop'));
+
+      expect(find.text('24:59'), findsOneWidget);
+    });
+
+    testWidgets('Timer resets', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1080, 1920));
+
+      SharedPreferences.setMockInitialValues({
+        'workMinutes': 25,
+        'breakMinutes': 5,
+      });
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MainScreen(
+            onThemeModeChanged: mockThemeCall.call,
+            notifications: mockNotificationsCall,
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Reset'));
+      await tester.tap(find.text('Start'));
+      await tester.pump(const Duration(seconds: 1));
+      await tester.tap(find.text('Stop'));
+      await tester.tap(find.text('Reset'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('25:00'), findsOneWidget);
     });
   });
 }
