@@ -498,7 +498,7 @@ class _MainScreenState extends State<MainScreen>
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
+                  /* const SizedBox(height: 10),
                   ElevatedButton(
                     onPressed: () {
                       setState(() {
@@ -510,8 +510,8 @@ class _MainScreenState extends State<MainScreen>
                       });
                     },
                     child: const Text('Test Durations'),
-                  ),
-                  SizedBox(height: screenHeight * 0.02),
+                  ), */
+                  //SizedBox(height: screenHeight * 0.02),
                 ],
               ),
             ),

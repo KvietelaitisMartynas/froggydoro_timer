@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:froggydoro/screens/time_settings_screen.dart';
 import 'package:mockito/mockito.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:froggydoro/screens/main_screen.dart';
+import 'package:froggydoro/notifications.dart';
 
 class MockUpdateTimer extends Mock {
   void call(
@@ -11,6 +13,14 @@ class MockUpdateTimer extends Mock {
     int breakMinutes,
     int breakSeconds,
   );
+}
+
+class MockThemeCall extends Mock {
+  void call(ThemeMode themeMode);
+}
+
+class MockNotificationsCall extends Mock implements Notifications {
+  void call();
 }
 
 void main() {
@@ -129,6 +139,31 @@ void main() {
       await tester.pump();
 
       expect(find.text('5 min'), findsOneWidget);
+    });
+  });
+
+  group('MainScreen', () {
+    late final MockThemeCall mockThemeCall;
+    late final MockNotificationsCall mockNotificationsCall;
+
+    setUp(() {
+      mockThemeCall = MockThemeCall();
+      mockNotificationsCall = MockNotificationsCall();
+    });
+
+    testWidgets('Renders MainScreen', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1080, 1920));
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MainScreen(
+            onThemeModeChanged: mockThemeCall.call,
+            notifications: mockNotificationsCall,
+          ),
+        ),
+      );
+
+      expect(find.text('Work Time'), findsOneWidget);
     });
   });
 }
