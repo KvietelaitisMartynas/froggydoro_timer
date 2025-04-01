@@ -431,57 +431,74 @@ class _MainScreenState extends State<MainScreen>
     );
   }
 
-  Widget buildButtons(){
-    final isCompleted = _totalSeconds == _maxSeconds || _totalSeconds == 0;
+  bool _hasStarted = false; // New flag to track if the timer has started
 
-    final theme = Theme.of(context);
+Widget buildButtons() {
+  final isCompleted = _totalSeconds == _maxSeconds || _totalSeconds == 0;
+  final theme = Theme.of(context);
 
-    final buttonColor =
-        theme.brightness == Brightness.dark
-            ? const Color(0xFFB0C8AE)
-            : const Color(0xFF586F51);
+  final buttonColor =
+      theme.brightness == Brightness.dark
+          ? const Color(0xFFB0C8AE)
+          : const Color(0xFF586F51);
 
-    return _isRunning || !isCompleted
-    ? Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        ButtonWidget(
-          color: buttonColor,
-          text: _isRunning ? 'Stop' : 'Start',
-          iconLocation: _isRunning ? 'assets/Icons/Pause.svg' : 'assets/Icons/Play.svg' ,
-          width: 120,
-          onClicked: () {
-            if(_isRunning){
-              _stopTimer(isReset: false);
-            }
-            else{
-              _startTimer();
-            }
-          },
-        ),
-        const SizedBox(width: 20),
-        ButtonWidget(
-          color: buttonColor,
-          text: 'Reset',
-          iconLocation: 'assets/Icons/Rewind.svg',
-          width: 120,
-          onClicked: () {
-            _stopTimer(isReset: true);
-            _resetTimer();
-          },
-        )
-      ],
-    )
-    : ButtonWidget(
+  // Show only Start button if timer has never started
+  if (!_hasStarted && !_isRunning) {
+    return ButtonWidget(
       color: buttonColor,
       text: 'Start',
-      iconLocation: 'assets/Icons/Play.svg' ,
+      iconLocation: 'assets/Icons/Play.svg',
       width: 200,
       onClicked: () {
+        _hasStarted = true; // Update flag when starting for the first time
         _startTimer();
       },
     );
   }
+
+  return _isRunning || !isCompleted
+      ? Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ButtonWidget(
+              color: buttonColor,
+              text: _isRunning ? 'Stop' : 'Start',
+              iconLocation:
+                  _isRunning ? 'assets/Icons/Pause.svg' : 'assets/Icons/Play.svg',
+              width: 120,
+              onClicked: () {
+                _hasStarted = true;
+                if (_isRunning) {
+                  _stopTimer(isReset: false);
+                } else {
+                  _startTimer();
+                }
+              },
+            ),
+            const SizedBox(width: 20),
+            ButtonWidget(
+              color: buttonColor,
+              text: 'Reset',
+              iconLocation: 'assets/Icons/Rewind.svg',
+              width: 120,
+              onClicked: () {
+                _hasStarted = false;
+                _stopTimer(isReset: true);
+                _resetTimer();
+              },
+            )
+          ],
+        )
+      : ButtonWidget(
+          color: buttonColor,
+          text: 'Start',
+          iconLocation: 'assets/Icons/Play.svg',
+          width: 200,
+          onClicked: () {
+            _startTimer();
+          },
+        );
+}
 
   @override
   Widget build(BuildContext context) {
