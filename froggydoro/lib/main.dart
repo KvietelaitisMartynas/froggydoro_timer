@@ -4,6 +4,7 @@ import 'package:froggydoro/screens/main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
+import 'package:flutter_svg/flutter_svg.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -94,6 +95,17 @@ class _MyAppState extends State<MyApp> {
             color: Color(0xFF586F51),
           ), // Light theme text color
         ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Color(0xFFE4E8CD), // Button color
+            foregroundColor: Color(0xFF586F51), // Text color
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: BorderSide(color: Color(0xFFF1F3E5), width: 1), // Border color and width
+            ),
+          ),
+        ),
+        
       ),
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
@@ -118,6 +130,16 @@ class _MyAppState extends State<MyApp> {
           bodyLarge: TextStyle(
             color: Color(0xFFB0C8AE),
           ), // Dark theme text color
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Color(0xFF63805C), // Button color
+            foregroundColor: Color(0xFFB0C8AE), // Text color
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: BorderSide(color: Color(0xFFB0C8AE), width: 1), // Border color and width
+            ),
+          ),
         ),
       ),
       themeMode: _themeMode,

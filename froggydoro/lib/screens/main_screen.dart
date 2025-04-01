@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:froggydoro/screens/settings_screen.dart';
+import 'package:froggydoro/widgets/build_button.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:froggydoro/notifications.dart';
 import 'package:froggydoro/widgets/music_Manager.dart';
@@ -39,6 +40,7 @@ class _MainScreenState extends State<MainScreen>
   Timer? _timer;
   bool _isRunning = false;
   int _sessionCount = 0;
+  int _maxSeconds = 0;
 
   final Set<int> _scheduledNotifications = {}; // Track scheduled notifications
 
@@ -115,7 +117,7 @@ class _MainScreenState extends State<MainScreen>
     try {
       final prefs = await SharedPreferences.getInstance();
       final startTimeString = prefs.getString('startTime');
-      final remainingTime = prefs.getInt('remainingTime') ?? 0;
+      final remainingTime = prefs.getInt('remainingTime') ?? _workMinutes * 60 + _workSeconds;
 
       if (startTimeString != null && _isRunning) {
         final startTime = DateTime.parse(startTimeString);
@@ -292,6 +294,7 @@ class _MainScreenState extends State<MainScreen>
       _isBreakTime = false;
       _totalSeconds = _workMinutes * 60 + _workSeconds;
       _sessionCount = 0;
+      _maxSeconds = _totalSeconds;
     });
     _saveSessionCount();
   }
@@ -428,6 +431,58 @@ class _MainScreenState extends State<MainScreen>
     );
   }
 
+  Widget buildButtons(){
+    final isCompleted = _totalSeconds == _maxSeconds || _totalSeconds == 0;
+
+    final theme = Theme.of(context);
+
+    final buttonColor =
+        theme.brightness == Brightness.dark
+            ? const Color(0xFFB0C8AE)
+            : const Color(0xFF586F51);
+
+    return _isRunning || !isCompleted
+    ? Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        ButtonWidget(
+          color: buttonColor,
+          text: _isRunning ? 'Stop' : 'Start',
+          iconLocation: _isRunning ? 'assets/Icons/Pause.svg' : 'assets/Icons/Play.svg' ,
+          width: 120,
+          onClicked: () {
+            if(_isRunning){
+              _stopTimer(isReset: false);
+            }
+            else{
+              _startTimer();
+            }
+          },
+        ),
+        const SizedBox(width: 20),
+        ButtonWidget(
+          color: buttonColor,
+          text: 'Reset',
+          iconLocation: 'assets/Icons/Rewind.svg',
+          width: 120,
+          onClicked: () {
+            _stopTimer(isReset: true);
+            _resetTimer();
+          },
+        )
+      ],
+    )
+    : ButtonWidget(
+      color: buttonColor,
+      text: 'Start',
+      iconLocation: 'assets/Icons/Play.svg' ,
+      width: 200,
+      onClicked: () {
+        _startTimer();
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
@@ -494,20 +549,21 @@ class _MainScreenState extends State<MainScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      ElevatedButton(
-                        onPressed: _startTimer,
-                        child: const Text('Start'),
-                      ),
-                      const SizedBox(width: 10),
-                      ElevatedButton(
-                        onPressed: () => _stopTimer(isReset: true),
-                        child: const Text('Stop'),
-                      ),
-                      const SizedBox(width: 10),
-                      ElevatedButton(
-                        onPressed: _resetTimer,
-                        child: const Text('Reset'),
-                      ),
+                      buildButtons(),
+                      // ElevatedButton(
+                      //   onPressed: _startTimer,
+                      //   child: const Text('Start'),
+                      // ),
+                      // const SizedBox(width: 10),
+                      // ElevatedButton(
+                      //   onPressed: () => _stopTimer(isReset: true),
+                      //   child: const Text('Stop'),
+                      // ),
+                      // const SizedBox(width: 10),
+                      // ElevatedButton(
+                      //   onPressed: _resetTimer,
+                      //   child: const Text('Reset'),
+                      // ),
                     ],
                   ),
                   /* const SizedBox(height: 10),
