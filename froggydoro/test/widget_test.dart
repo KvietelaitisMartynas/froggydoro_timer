@@ -245,9 +245,7 @@ void main() {
 
     testWidgets('Tests theme mode change to dark', (tester) async {
       await tester.binding.setSurfaceSize(const Size(1080, 1920));
-      SharedPreferences.setMockInitialValues({
-        'themeMode': 'light',
-      });
+      SharedPreferences.setMockInitialValues({'themeMode': 'light'});
       await tester.pumpWidget(
         MaterialApp(
           theme: ThemeData.light(),
@@ -274,9 +272,7 @@ void main() {
 
     testWidgets('Tests always on display', (tester) async {
       await tester.binding.setSurfaceSize(const Size(1080, 1920));
-      SharedPreferences.setMockInitialValues({
-        'isWakeLockEnabled': false,
-      });
+      SharedPreferences.setMockInitialValues({'isWakeLockEnabled': false});
 
       await tester.pumpWidget(
         MaterialApp(
@@ -289,7 +285,7 @@ void main() {
           ),
         ),
       );
-  
+
       expect(find.text('Always on display'), findsOneWidget);
       expect(find.byType(Switch), findsOneWidget);
       final switchWidget = tester.widget<Switch>(find.byType(Switch));
@@ -307,9 +303,7 @@ void main() {
 
     testWidgets('Tests ambience settings', (tester) async {
       await tester.binding.setSurfaceSize(const Size(1080, 1920));
-      SharedPreferences.setMockInitialValues({
-        'ambientSound': 'None',
-      });
+      SharedPreferences.setMockInitialValues({'ambientSound': 'None'});
 
       await tester.pumpWidget(
         MaterialApp(
@@ -354,7 +348,7 @@ void main() {
       );
 
       expect(find.text('Work/Break Time'), findsOneWidget);
-      
+
       await tester.tap(find.text('Work/Break Time'));
       await tester.pumpAndSettle();
 
