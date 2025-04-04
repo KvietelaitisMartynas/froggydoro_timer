@@ -15,6 +15,7 @@ class MockUpdateTimer extends Mock {
     int workSeconds,
     int breakMinutes,
     int breakSeconds,
+    int roundCount,
   );
 }
 
@@ -117,7 +118,7 @@ void main() {
       await tester.tap(find.text('Set'));
       await tester.pump();
 
-      verify(mockUpdateTimer(25, 0, 5, 0)).called(1);
+      verify(mockUpdateTimer(25, 0, 5, 0, 4)).called(1);
     });
 
     testWidgets('Add break time', (tester) async {
@@ -132,7 +133,7 @@ void main() {
         ),
       );
 
-      await tester.tap(find.byIcon(Icons.chevron_right).last);
+      await tester.tap(find.byIcon(Icons.chevron_right).at(1));
       await tester.pump();
 
       expect(find.text('15 min'), findsOneWidget);
@@ -150,7 +151,7 @@ void main() {
         ),
       );
 
-      await tester.tap(find.byIcon(Icons.chevron_left).last);
+      await tester.tap(find.byIcon(Icons.chevron_left).at(1));
       await tester.pump();
 
       expect(find.text('5 min'), findsOneWidget);

@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/time_step.dart';
 
 class TimeSettingsScreen extends StatefulWidget {
-  final Function(int, int, int, int) updateTimer;
+  final Function(int, int, int, int, int) updateTimer;
 
   const TimeSettingsScreen({required this.updateTimer, super.key});
 
@@ -14,6 +14,7 @@ class TimeSettingsScreen extends StatefulWidget {
 class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
   int _workMinutes = 25;
   int _breakMinutes = 5;
+  int _roundCount = 4;
 
   @override
   void initState() {
@@ -26,6 +27,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
     setState(() {
       _workMinutes = prefs.getInt('workMinutes') ?? 25;
       _breakMinutes = prefs.getInt('breakMinutes') ?? 5;
+      _roundCount = prefs.getInt('roundCount') ?? 4;
     });
   }
 
@@ -33,10 +35,11 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('workMinutes', _workMinutes);
     await prefs.setInt('breakMinutes', _breakMinutes);
+    await prefs.setInt('roundCount', _roundCount);
   }
 
   void saveTime() {
-    widget.updateTimer(_workMinutes, 0, _breakMinutes, 0);
+    widget.updateTimer(_workMinutes, 0, _breakMinutes, 0, _roundCount);
     _saveTimeSettings();
   }
 
@@ -68,6 +71,22 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
     setState(() {
       if (_breakMinutes > 5) {
         _breakMinutes -= 5;
+      }
+    });
+  }
+
+  void addRound() {
+    setState(() {
+      if (_roundCount < 10) {
+        _roundCount += 1;
+      }
+    });
+  }
+
+  void subtractRound() {
+    setState(() {
+      if (_roundCount > 1) {
+        _roundCount -= 1;
       }
     });
   }
@@ -106,6 +125,13 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
               unit: 'min',
             ),
             const SizedBox(height: 20),
+            TimeStep(
+              label: "Round Count",
+              value: _roundCount,
+              onIncrement: addRound,
+              onDecrement: subtractRound,
+              unit: 'rounds',
+            ),
             ElevatedButton(onPressed: saveTime, child: const Text("Set")),
           ],
         ),

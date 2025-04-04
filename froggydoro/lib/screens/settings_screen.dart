@@ -4,7 +4,7 @@ import 'time_settings_screen.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 class SettingsScreen extends StatefulWidget {
-  final Function(int, int, int, int) updateTimer;
+  final Function(int, int, int, int, int) updateTimer;
   final ValueChanged<ThemeMode> onThemeModeChanged;
 
   const SettingsScreen({

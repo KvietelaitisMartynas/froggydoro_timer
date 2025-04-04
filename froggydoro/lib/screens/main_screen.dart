@@ -39,6 +39,8 @@ class _MainScreenState extends State<MainScreen>
   Timer? _timer;
   bool _isRunning = false;
   int _sessionCount = 0;
+  int _roundCount = 4;
+  late int _initialCount;
 
   final Set<int> _scheduledNotifications = {}; // Track scheduled notifications
 
@@ -62,6 +64,9 @@ class _MainScreenState extends State<MainScreen>
     setState(() {
       _workMinutes = prefs.getInt('workMinutes') ?? 25;
       _breakMinutes = prefs.getInt('breakMinutes') ?? 5;
+      _sessionCount = prefs.getInt('sessionCount') ?? 0;
+      _roundCount = prefs.getInt('roundCount') ?? 1;
+      _initialCount = _roundCount;
     });
   }
 
@@ -75,7 +80,6 @@ class _MainScreenState extends State<MainScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      // Reload the timer state when the app resumes
       _loadTimerState();
     }
   }
@@ -137,17 +141,13 @@ class _MainScreenState extends State<MainScreen>
     }
   }
 
-  void _updateTimer(
-    int workMinutes,
-    int workSeconds,
-    int breakMinutes,
-    int breakSeconds,
-  ) {
+  void _updateTimer(int workMinutes, int workSeconds, int breakMinutes, int breakSeconds, int roundCount,) {
     setState(() {
       _workMinutes = workMinutes;
       _workSeconds = workSeconds;
       _breakMinutes = breakMinutes;
       _breakSeconds = breakSeconds;
+      _roundCount = roundCount;
       if (_isBreakTime) {
         _totalSeconds = _breakMinutes * 60 + _breakSeconds;
       } else {
@@ -268,12 +268,34 @@ class _MainScreenState extends State<MainScreen>
     if (_totalSeconds == 0) {
       if (_isBreakTime) {
         _sessionCount++;
-        _showSessionCompletePopup(
-          context,
-          'Your break is over.',
-          'Start your work session.',
-          _restartWorkTime,
-        );
+
+        setState(() {
+          if (_roundCount > 0) {
+            _roundCount--;
+          }
+        });
+        _saveSessionCount();
+        _saveRoundCount();
+
+        if (_roundCount == 0){
+          _showSessionCompletePopup(
+            context,
+            'All rounds completed', 
+            'Take a long rest', 
+            () {
+              _resetTimer();
+              _roundCount = _initialCount;
+              _saveRoundCount();
+            },
+          );
+        } else {
+          _showSessionCompletePopup(
+            context,
+            'Your break is over.',
+            'Start your work session.',
+            _restartWorkTime,
+          );
+        }
       } else {
         _showSessionCompletePopup(
           context,
@@ -291,7 +313,6 @@ class _MainScreenState extends State<MainScreen>
     setState(() {
       _isBreakTime = false;
       _totalSeconds = _workMinutes * 60 + _workSeconds;
-      _sessionCount = 0;
     });
     _saveSessionCount();
   }
@@ -313,6 +334,7 @@ class _MainScreenState extends State<MainScreen>
   }
 
   void _pauseTimer() {
+    _timer?.cancel();
     setState(() {
       _isRunning = false;
       if (_isBreakTime) {
@@ -327,6 +349,11 @@ class _MainScreenState extends State<MainScreen>
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('sessionCount', _sessionCount);
   }
+
+  void _saveRoundCount() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setInt('roundCount', _roundCount);
+}
 
   String _formatTime(int totalSeconds) {
     int minutes = totalSeconds ~/ 60;
@@ -471,7 +498,7 @@ class _MainScreenState extends State<MainScreen>
                   ),
                   SizedBox(height: screenHeight * 0.02),
                   Text(
-                    "Work sessions completed: $_sessionCount",
+                    "Total work sessions completed: $_sessionCount",
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       fontSize: screenWidth * 0.045,
@@ -488,6 +515,14 @@ class _MainScreenState extends State<MainScreen>
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       fontSize: screenWidth * 0.15,
+                    ),
+                  ),
+                  SizedBox(height: screenHeight * 0.02),
+                  Text(
+                    "Rounds left: $_roundCount",
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: screenWidth * 0.045,
                     ),
                   ),
                   SizedBox(height: screenHeight * 0.02),
@@ -510,7 +545,7 @@ class _MainScreenState extends State<MainScreen>
                       ),
                     ],
                   ),
-                  /* const SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   ElevatedButton(
                     onPressed: () {
                       setState(() {
@@ -519,10 +554,11 @@ class _MainScreenState extends State<MainScreen>
                         _breakMinutes = 0;
                         _breakSeconds = 5;
                         _totalSeconds = _workMinutes * 60 + _workSeconds;
+                        _roundCount = 2;
                       });
                     },
                     child: const Text('Test Durations'),
-                  ), */
+                  ), 
                   //SizedBox(height: screenHeight * 0.02),
                 ],
               ),
