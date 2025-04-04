@@ -268,20 +268,26 @@ class _MainScreenState extends State<MainScreen>
     if (_totalSeconds == 0) {
       if (_isBreakTime) {
         _sessionCount++;
+        _saveSessionCount();
 
-        setState(() {
+        _showSessionCompletePopup(context, 
+          'Your break is over!', 
+          'Start your work session',
+          _restartWorkTime, 
+        );
+      } else {
+        setState((){
           if (_roundCount > 0) {
             _roundCount--;
           }
         });
-        _saveSessionCount();
         _saveRoundCount();
 
-        if (_roundCount == 0){
+        if (_roundCount == 0) {
           _showSessionCompletePopup(
-            context,
-            'All rounds completed', 
-            'Take a long rest', 
+            context, 
+            'All rounds completed!', 
+            'Take a long rest',
             () {
               _resetTimer();
               _roundCount = _initialCount;
@@ -290,21 +296,17 @@ class _MainScreenState extends State<MainScreen>
           );
         } else {
           _showSessionCompletePopup(
-            context,
-            'Your break is over.',
-            'Start your work session.',
-            _restartWorkTime,
+            context, 
+            'Your work session is over!', 
+            'Start your break',
+            _startBreakTime,
           );
         }
-      } else {
-        _showSessionCompletePopup(
-          context,
-          'Your work session is complete.',
-          'Start your break.',
-          _startBreakTime,
-        );
       }
     }
+
+
+
   }
 
   void _resetTimer() {
