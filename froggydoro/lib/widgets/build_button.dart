@@ -9,17 +9,22 @@ class ButtonWidget extends StatelessWidget {
   final double width;
 
   const ButtonWidget({
-    Key? key,
+    super.key,
     required this.color,
     required this.iconLocation,
     required this.text,
     required this.onClicked,
     required this.width,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) => ElevatedButton(
-
+    style: ElevatedButton.styleFrom(
+      minimumSize: Size(width, 50), // Button width and height
+      textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      elevation: 4, // Shadow effect
+    ),
+    onPressed: onClicked,
 
     child: Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -31,17 +36,8 @@ class ButtonWidget extends StatelessWidget {
           colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
         ),
         const SizedBox(width: 5), // Space between icon and text
-        Text(
-          text,
-        ),
+        Text(text),
       ],
     ),
-    style: ElevatedButton.styleFrom(
-      minimumSize: Size(width, 50), // Button width and height
-      textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-      elevation: 4, // Shadow effect
-    ),
-    onPressed: onClicked,
   );
 }
-

@@ -4,7 +4,6 @@ import 'package:froggydoro/screens/main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
-import 'package:flutter_svg/flutter_svg.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -18,6 +17,22 @@ void main() async {
   // Initialize notifications
   final notifications = Notifications();
   await notifications.init();
+
+  final prefs = await SharedPreferences.getInstance();
+  final wasActive = prefs.getBool('wasActive') ?? false;
+
+  if (!wasActive) {
+    final prefs = await SharedPreferences.getInstance();
+    final workTime = prefs.getInt('workTime') ?? 25;
+    await prefs.setInt('totalSeconds', workTime * 60);
+    await prefs.setInt('remainingTime', workTime * 60);
+    await prefs.setBool('isRunning', false);
+    await prefs.setBool('isBreakTime', false);
+    await prefs.setBool("hasStarted", false);
+  }
+
+  // Mark as active again
+  prefs.setBool('wasActive', true);
 
   runApp(MyApp(notifications: notifications));
 }
@@ -101,11 +116,13 @@ class _MyAppState extends State<MyApp> {
             foregroundColor: Color(0xFF586F51), // Text color
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
-              side: BorderSide(color: Color(0xFFF1F3E5), width: 1), // Border color and width
+              side: BorderSide(
+                color: Color(0xFFF1F3E5),
+                width: 1,
+              ), // Border color and width
             ),
           ),
         ),
-        
       ),
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
@@ -137,7 +154,10 @@ class _MyAppState extends State<MyApp> {
             foregroundColor: Color(0xFFB0C8AE), // Text color
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
-              side: BorderSide(color: Color(0xFFB0C8AE), width: 1), // Border color and width
+              side: BorderSide(
+                color: Color(0xFFB0C8AE),
+                width: 1,
+              ), // Border color and width
             ),
           ),
         ),

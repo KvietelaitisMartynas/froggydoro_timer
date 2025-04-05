@@ -41,6 +41,7 @@ class _MainScreenState extends State<MainScreen>
   bool _isRunning = false;
   int _sessionCount = 0;
   int _maxSeconds = 0;
+  bool _hasStarted = false;
 
   final Set<int> _scheduledNotifications = {}; // Track scheduled notifications
 
@@ -64,6 +65,8 @@ class _MainScreenState extends State<MainScreen>
     setState(() {
       _workMinutes = prefs.getInt('workMinutes') ?? 25;
       _breakMinutes = prefs.getInt('breakMinutes') ?? 5;
+      _totalSeconds = _workMinutes * 60;
+      _saveTimerState();
     });
   }
 
@@ -111,13 +114,16 @@ class _MainScreenState extends State<MainScreen>
     await prefs.setInt('remainingTime', _totalSeconds);
     await prefs.setBool('isRunning', _isRunning);
     await prefs.setBool('isBreakTime', _isBreakTime);
+    await prefs.setBool("hasStarted", _hasStarted);
   }
 
   void _loadTimerState() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final startTimeString = prefs.getString('startTime');
-      final remainingTime = prefs.getInt('remainingTime') ?? _workMinutes * 60 + _workSeconds;
+      final remainingTime =
+          prefs.getInt('remainingTime') ?? _workMinutes * 60 + _workSeconds;
+      final timeBlock = _isBreakTime ? _breakMinutes : _workMinutes;
 
       if (startTimeString != null && _isRunning) {
         final startTime = DateTime.parse(startTimeString);
@@ -130,6 +136,10 @@ class _MainScreenState extends State<MainScreen>
           _isRunning =
               updatedRemainingTime > 0 && (prefs.getBool('isRunning') ?? false);
         });
+      } else if (remainingTime != timeBlock && _hasStarted) {
+        _totalSeconds = timeBlock * 60;
+        _isRunning = false;
+        _hasStarted = false;
       } else {
         _totalSeconds = remainingTime;
         _isRunning = false;
@@ -431,40 +441,40 @@ class _MainScreenState extends State<MainScreen>
     );
   }
 
-  bool _hasStarted = false; // New flag to track if the timer has started
+  Widget buildButtons() {
+    final isCompleted = _totalSeconds == _maxSeconds || _totalSeconds == 0;
+    final theme = Theme.of(context);
 
-Widget buildButtons() {
-  final isCompleted = _totalSeconds == _maxSeconds || _totalSeconds == 0;
-  final theme = Theme.of(context);
+    final buttonColor =
+        theme.brightness == Brightness.dark
+            ? const Color(0xFFB0C8AE)
+            : const Color(0xFF586F51);
 
-  final buttonColor =
-      theme.brightness == Brightness.dark
-          ? const Color(0xFFB0C8AE)
-          : const Color(0xFF586F51);
+    // Show only Start button if timer has never started
+    if (!_hasStarted && !_isRunning) {
+      return ButtonWidget(
+        color: buttonColor,
+        text: 'Start',
+        iconLocation: 'assets/Icons/Play.svg',
+        width: 200,
+        onClicked: () {
+          _hasStarted = true; // Update flag when starting for the first time
+          _startTimer();
+        },
+      );
+    }
 
-  // Show only Start button if timer has never started
-  if (!_hasStarted && !_isRunning) {
-    return ButtonWidget(
-      color: buttonColor,
-      text: 'Start',
-      iconLocation: 'assets/Icons/Play.svg',
-      width: 200,
-      onClicked: () {
-        _hasStarted = true; // Update flag when starting for the first time
-        _startTimer();
-      },
-    );
-  }
-
-  return _isRunning || !isCompleted
-      ? Row(
+    return _isRunning || !isCompleted
+        ? Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ButtonWidget(
               color: buttonColor,
               text: _isRunning ? 'Stop' : 'Start',
               iconLocation:
-                  _isRunning ? 'assets/Icons/Pause.svg' : 'assets/Icons/Play.svg',
+                  _isRunning
+                      ? 'assets/Icons/Pause.svg'
+                      : 'assets/Icons/Play.svg',
               width: 120,
               onClicked: () {
                 _hasStarted = true;
@@ -486,10 +496,10 @@ Widget buildButtons() {
                 _stopTimer(isReset: true);
                 _resetTimer();
               },
-            )
+            ),
           ],
         )
-      : ButtonWidget(
+        : ButtonWidget(
           color: buttonColor,
           text: 'Start',
           iconLocation: 'assets/Icons/Play.svg',
@@ -498,7 +508,7 @@ Widget buildButtons() {
             _startTimer();
           },
         );
-}
+  }
 
   @override
   Widget build(BuildContext context) {
