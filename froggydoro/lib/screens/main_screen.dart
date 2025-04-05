@@ -39,8 +39,8 @@ class _MainScreenState extends State<MainScreen>
   Timer? _timer;
   bool _isRunning = false;
   int _sessionCount = 0;
-  int _roundCount = 4;
-  late int _initialCount;
+  int _roundCount = 4; // was _roundCount
+  late int _initialRoundCount;
 
   final Set<int> _scheduledNotifications = {}; // Track scheduled notifications
 
@@ -66,7 +66,7 @@ class _MainScreenState extends State<MainScreen>
       _breakMinutes = prefs.getInt('breakMinutes') ?? 5;
       _sessionCount = prefs.getInt('sessionCount') ?? 0;
       _roundCount = prefs.getInt('roundCount') ?? 1;
-      _initialCount = _roundCount;
+      _initialRoundCount = _roundCount;
     });
   }
 
@@ -147,7 +147,7 @@ class _MainScreenState extends State<MainScreen>
       _workSeconds = workSeconds;
       _breakMinutes = breakMinutes;
       _breakSeconds = breakSeconds;
-      _roundCount = roundCount;
+      roundCount = roundCount;
       if (_isBreakTime) {
         _totalSeconds = _breakMinutes * 60 + _breakSeconds;
       } else {
@@ -290,7 +290,7 @@ class _MainScreenState extends State<MainScreen>
             'Take a long rest',
             () {
               _resetTimer();
-              _roundCount = _initialCount;
+              _roundCount = _initialRoundCount;
               _saveRoundCount();
             },
           );
@@ -355,7 +355,7 @@ class _MainScreenState extends State<MainScreen>
   void _saveRoundCount() async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.setInt('roundCount', _roundCount);
-}
+  }
 
   String _formatTime(int totalSeconds) {
     int minutes = totalSeconds ~/ 60;
