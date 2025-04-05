@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:froggydoro/screens/settings_screen.dart';
+import 'package:froggydoro/widgets/build_button.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:froggydoro/notifications.dart';
 import 'package:froggydoro/widgets/music_Manager.dart';
@@ -41,6 +42,8 @@ class _MainScreenState extends State<MainScreen>
   int _sessionCount = 0;
   int _roundCount = 4;
   late int _initialCount;
+  int _maxSeconds = 0;
+  bool _hasStarted = false;
 
   final Set<int> _scheduledNotifications = {}; // Track scheduled notifications
 
@@ -67,6 +70,8 @@ class _MainScreenState extends State<MainScreen>
       _sessionCount = prefs.getInt('sessionCount') ?? 0;
       _roundCount = prefs.getInt('roundCount') ?? 1;
       _initialCount = _roundCount;
+      _totalSeconds = _workMinutes * 60;
+      _saveTimerState();
     });
   }
 
@@ -113,13 +118,16 @@ class _MainScreenState extends State<MainScreen>
     await prefs.setInt('remainingTime', _totalSeconds);
     await prefs.setBool('isRunning', _isRunning);
     await prefs.setBool('isBreakTime', _isBreakTime);
+    await prefs.setBool("hasStarted", _hasStarted);
   }
 
   void _loadTimerState() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final startTimeString = prefs.getString('startTime');
-      final remainingTime = prefs.getInt('remainingTime') ?? 0;
+      final remainingTime =
+          prefs.getInt('remainingTime') ?? _workMinutes * 60 + _workSeconds;
+      final timeBlock = _isBreakTime ? _breakMinutes : _workMinutes;
 
       if (startTimeString != null && _isRunning) {
         final startTime = DateTime.parse(startTimeString);
@@ -132,6 +140,10 @@ class _MainScreenState extends State<MainScreen>
           _isRunning =
               updatedRemainingTime > 0 && (prefs.getBool('isRunning') ?? false);
         });
+      } else if (remainingTime != timeBlock && _hasStarted) {
+        _totalSeconds = timeBlock * 60;
+        _isRunning = false;
+        _hasStarted = false;
       } else {
         _totalSeconds = remainingTime;
         _isRunning = false;
@@ -457,6 +469,75 @@ class _MainScreenState extends State<MainScreen>
     );
   }
 
+  Widget buildButtons() {
+    final isCompleted = _totalSeconds == _maxSeconds || _totalSeconds == 0;
+    final theme = Theme.of(context);
+
+    final buttonColor =
+        theme.brightness == Brightness.dark
+            ? const Color(0xFFB0C8AE)
+            : const Color(0xFF586F51);
+
+    // Show only Start button if timer has never started
+    if (!_hasStarted && !_isRunning) {
+      return ButtonWidget(
+        color: buttonColor,
+        text: 'Start',
+        iconLocation: 'assets/Icons/Play.svg',
+        width: 200,
+        onClicked: () {
+          _hasStarted = true; // Update flag when starting for the first time
+          _startTimer();
+        },
+      );
+    }
+
+    return _isRunning || !isCompleted
+        ? Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ButtonWidget(
+              color: buttonColor,
+              text: _isRunning ? 'Stop' : 'Start',
+              iconLocation:
+                  _isRunning
+                      ? 'assets/Icons/Pause.svg'
+                      : 'assets/Icons/Play.svg',
+              width: 120,
+              onClicked: () {
+                _hasStarted = true;
+                if (_isRunning) {
+                  _stopTimer(isReset: false);
+                } else {
+                  _startTimer();
+                }
+              },
+            ),
+            const SizedBox(width: 20),
+            ButtonWidget(
+              color: buttonColor,
+              text: 'Reset',
+              iconLocation: 'assets/Icons/Rewind.svg',
+              width: 120,
+              onClicked: () {
+                _hasStarted = false;
+                _stopTimer(isReset: true);
+                _resetTimer();
+              },
+            ),
+          ],
+        )
+        : ButtonWidget(
+          color: buttonColor,
+          text: 'Start',
+          iconLocation: 'assets/Icons/Play.svg',
+          width: 200,
+          onClicked: () {
+            _startTimer();
+          },
+        );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
@@ -531,20 +612,21 @@ class _MainScreenState extends State<MainScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      ElevatedButton(
-                        onPressed: _startTimer,
-                        child: const Text('Start'),
-                      ),
-                      const SizedBox(width: 10),
-                      ElevatedButton(
-                        onPressed: () => _stopTimer(isReset: true),
-                        child: const Text('Stop'),
-                      ),
-                      const SizedBox(width: 10),
-                      ElevatedButton(
-                        onPressed: _resetTimer,
-                        child: const Text('Reset'),
-                      ),
+                      buildButtons(),
+                      // ElevatedButton(
+                      //   onPressed: _startTimer,
+                      //   child: const Text('Start'),
+                      // ),
+                      // const SizedBox(width: 10),
+                      // ElevatedButton(
+                      //   onPressed: () => _stopTimer(isReset: true),
+                      //   child: const Text('Stop'),
+                      // ),
+                      // const SizedBox(width: 10),
+                      // ElevatedButton(
+                      //   onPressed: _resetTimer,
+                      //   child: const Text('Reset'),
+                      // ),
                     ],
                   ),
                   const SizedBox(height: 10),

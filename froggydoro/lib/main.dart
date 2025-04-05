@@ -18,6 +18,22 @@ void main() async {
   final notifications = Notifications();
   await notifications.init();
 
+  final prefs = await SharedPreferences.getInstance();
+  final wasActive = prefs.getBool('wasActive') ?? false;
+
+  if (!wasActive) {
+    final prefs = await SharedPreferences.getInstance();
+    final workTime = prefs.getInt('workTime') ?? 25;
+    await prefs.setInt('totalSeconds', workTime * 60);
+    await prefs.setInt('remainingTime', workTime * 60);
+    await prefs.setBool('isRunning', false);
+    await prefs.setBool('isBreakTime', false);
+    await prefs.setBool("hasStarted", false);
+  }
+
+  // Mark as active again
+  prefs.setBool('wasActive', true);
+
   runApp(MyApp(notifications: notifications));
 }
 
@@ -94,6 +110,19 @@ class _MyAppState extends State<MyApp> {
             color: Color(0xFF586F51),
           ), // Light theme text color
         ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Color(0xFFE4E8CD), // Button color
+            foregroundColor: Color(0xFF586F51), // Text color
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: BorderSide(
+                color: Color(0xFFF1F3E5),
+                width: 1,
+              ), // Border color and width
+            ),
+          ),
+        ),
       ),
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
@@ -118,6 +147,19 @@ class _MyAppState extends State<MyApp> {
           bodyLarge: TextStyle(
             color: Color(0xFFB0C8AE),
           ), // Dark theme text color
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Color(0xFF63805C), // Button color
+            foregroundColor: Color(0xFFB0C8AE), // Text color
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: BorderSide(
+                color: Color(0xFFB0C8AE),
+                width: 1,
+              ), // Border color and width
+            ),
+          ),
         ),
       ),
       themeMode: _themeMode,
