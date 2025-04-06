@@ -284,13 +284,24 @@ class _MainScreenState extends State<MainScreen>
     _cancelScheduledNotifications();
     if (Platform.isIOS) {
       try {
-        widget.notifications.scheduleNotification(
+        if(_currentRound >= _roundCountSetting){
+            widget.notifications.showNotification(
+          id: 4,
+          title: 'Cycle complete',
+          body:
+              'You have finished your planned rounds',
+        );
+        }
+        else{
+          widget.notifications.scheduleNotification(
           id: 1,
           title: _isBreakTime ? 'Break Over!' : 'Work Complete!',
           body:
               _isBreakTime ? 'Time to get back to work.' : 'Ready for a break?',
           scheduledTime: endTime,
         );
+        }
+        
         _scheduledNotifications.add(1);
       } catch (e) {
         print('Error scheduling iOS notification: $e');
@@ -370,12 +381,22 @@ class _MainScreenState extends State<MainScreen>
 
     if (Platform.isAndroid) {
       try {
-        widget.notifications.showNotification(
+        if(_currentRound >= _roundCountSetting){
+          widget.notifications.showNotification(
+          id: 3,
+          title: 'Cycle complete',
+          body:
+              'You have finished your planned rounds',
+        );  
+        }
+        else{
+          widget.notifications.showNotification(
           id: 2,
           title: _isBreakTime ? 'Break Over!' : 'Work Complete!',
           body:
               _isBreakTime ? 'Time to get back to work.' : 'Ready for a break?',
         );
+        }
       } catch (e) {
         print('Error showing immediate Android notification: $e');
       }
@@ -423,9 +444,11 @@ class _MainScreenState extends State<MainScreen>
           _showSessionCompletePopup(
             context,
             'Cycle Complete!',
-            'All $_roundCountSetting rounds finished. Start a long break or reset?',
-            _startTimer,
+            'All $_roundCountSetting rounds finished!',
+            _resetTimer,
+            showStart: false,
             showPause: false,
+            showReset: true,
           );
         }
       } else {
@@ -584,7 +607,9 @@ class _MainScreenState extends State<MainScreen>
     String messageTitle,
     String messageBody,
     VoidCallback onStartPressed, {
+    bool showStart = true,
     bool showPause = true,
+    bool showReset = false,
   }) {
     final theme = Theme.of(context);
     final backgroundColor =
@@ -640,6 +665,7 @@ class _MainScreenState extends State<MainScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    if (showStart) ...[
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: buttonColor,
@@ -651,6 +677,7 @@ class _MainScreenState extends State<MainScreen>
                       },
                       child: const Text('Start'),
                     ),
+                    ],
                     if (showPause) ...[
                       const SizedBox(width: 10),
                       ElevatedButton(
@@ -663,6 +690,21 @@ class _MainScreenState extends State<MainScreen>
                           // State is already paused when popup shows
                         },
                         child: const Text('Pause'),
+                      ),
+                    ],
+                    if (showReset) ...[
+                      const SizedBox(width: 10),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: buttonColor,
+                          foregroundColor: textColor,
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          onStartPressed();
+                          // State is already paused when popup shows
+                        },
+                        child: const Text('Okay'),
                       ),
                     ],
                   ],
