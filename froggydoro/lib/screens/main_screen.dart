@@ -413,6 +413,10 @@ class _MainScreenState extends State<MainScreen>
       });
       _saveTimerState();
 
+      setState(() {
+        _currentRound++;
+      });
+
       if (!triggeredByLoad && mounted) {
         _showSessionCompletePopup(
           context,
@@ -454,9 +458,7 @@ class _MainScreenState extends State<MainScreen>
       } else {
         // ---- Normal Work Round Completed, Move to Next ----
         int roundCompleted = _currentRound; // Capture before incrementing
-        setState(() {
-          _currentRound++;
-        });
+        
         _saveTimerState();
 
         if (!triggeredByLoad && mounted) {
