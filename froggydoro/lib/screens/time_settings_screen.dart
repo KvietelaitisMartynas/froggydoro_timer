@@ -15,7 +15,7 @@ class TimeSettingsScreen extends StatefulWidget {
 class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
   int _workMinutes = 25;
   int _breakMinutes = 5;
-  int _roundCount = 4;
+  int _defaultRoundCount = 4;
   List<Map<String, dynamic>> _presets = [];
   TextEditingController _presetNameController = TextEditingController();
 
@@ -31,7 +31,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
     setState(() {
       _workMinutes = prefs.getInt('workMinutes') ?? 25;
       _breakMinutes = prefs.getInt('breakMinutes') ?? 5;
-      _roundCount = prefs.getInt('roundCount') ?? 4;
+      _defaultRoundCount = prefs.getInt('defaultRoundCount') ?? 4;
     });
   }
 
@@ -39,7 +39,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('workMinutes', _workMinutes);
     await prefs.setInt('breakMinutes', _breakMinutes);
-    await prefs.setInt('roundCount', _roundCount);
+    await prefs.setInt('defaultRoundCount', _defaultRoundCount);
   }
 
   Future<void> _savePreset(String name) async {
@@ -49,7 +49,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
       'name': name,
       'workMinutes': _workMinutes,
       'breakMinutes': _breakMinutes,
-      'roundCount': _roundCount,
+      'defaultRoundCount': _defaultRoundCount,
     };
 
     List<String> savedPresets = prefs.getStringList('presets') ?? [];
@@ -91,9 +91,9 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
     setState(() {
       _workMinutes = preset['workMinutes'] ?? 25;
       _breakMinutes = preset['breakMinutes'] ?? 5;
-      _roundCount = preset['roundCount'] ?? 4;
+      _defaultRoundCount = preset['defaultRoundCount'] ?? 4;
     });
-    widget.updateTimer(_workMinutes, 0, _breakMinutes, 0, _roundCount);
+    widget.updateTimer(_workMinutes, 0, _breakMinutes, 0, _defaultRoundCount);
   }
 
   Future<void> _deletePreset(int index) async {
@@ -148,7 +148,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
             const SizedBox(height: 20),
             TimeStep(
               label: "Round Count",
-              value: _roundCount,
+              value: _defaultRoundCount,
               onIncrement: addRound,
               onDecrement: subtractRound,
               unit: 'rounds',
@@ -231,22 +231,22 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
 
   void addRound() {
     setState(() {
-      if (_roundCount < 10) {
-        _roundCount += 1;
+      if (_defaultRoundCount < 10) {
+        _defaultRoundCount += 1;
       }
     });
   }
 
   void subtractRound() {
     setState(() {
-      if (_roundCount > 1) {
-        _roundCount -= 1;
+      if (_defaultRoundCount > 1) {
+        _defaultRoundCount -= 1;
       }
     });
   }
 
   void saveTime() {
-    widget.updateTimer(_workMinutes, 0, _breakMinutes, 0, _roundCount);
+    widget.updateTimer(_workMinutes, 0, _breakMinutes, 0, _defaultRoundCount);
     _saveTimeSettings();
   }
 }

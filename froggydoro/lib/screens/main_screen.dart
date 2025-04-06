@@ -68,8 +68,8 @@ class _MainScreenState extends State<MainScreen>
       _workMinutes = prefs.getInt('workMinutes') ?? 25;
       _breakMinutes = prefs.getInt('breakMinutes') ?? 5;
       _sessionCount = prefs.getInt('sessionCount') ?? 0;
-      _roundCount = prefs.getInt('roundCount') ?? 1;
-      _initialRoundCount = _roundCount;
+      _initialRoundCount = prefs.getInt('defaultRoundCount') ?? 1;
+      _roundCount = _initialRoundCount;
       _totalSeconds = _workMinutes * 60;
       _saveTimerState();
     });
@@ -153,13 +153,13 @@ class _MainScreenState extends State<MainScreen>
     }
   }
 
-  void _updateTimer(int workMinutes, int workSeconds, int breakMinutes, int breakSeconds, int roundCount,) {
+  void _updateTimer(int workMinutes, int workSeconds, int breakMinutes, int breakSeconds, int roundCount) {
     setState(() {
       _workMinutes = workMinutes;
       _workSeconds = workSeconds;
       _breakMinutes = breakMinutes;
       _breakSeconds = breakSeconds;
-      roundCount = roundCount;
+      _initialRoundCount = roundCount;
       if (_isBreakTime) {
         _totalSeconds = _breakMinutes * 60 + _breakSeconds;
       } else {
@@ -167,6 +167,7 @@ class _MainScreenState extends State<MainScreen>
       }
     });
     _resetTimer();
+    _saveTimerState();
   }
 
   Future<bool> isExactAlarmPermissionGranted() async {
@@ -293,7 +294,6 @@ class _MainScreenState extends State<MainScreen>
             _roundCount--;
           }
         });
-        _saveRoundCount();
 
         if (_roundCount == 0) {
           _showSessionCompletePopup(
@@ -301,9 +301,9 @@ class _MainScreenState extends State<MainScreen>
             'All rounds completed!', 
             'Take a long rest',
             () {
-              _resetTimer();
-              _roundCount = _initialRoundCount;
-              _saveRoundCount();
+              setState(() {
+                _resetTimer();
+              });
             },
           );
         } else {
@@ -327,6 +327,7 @@ class _MainScreenState extends State<MainScreen>
     setState(() {
       _isBreakTime = false;
       _totalSeconds = _workMinutes * 60 + _workSeconds;
+      _roundCount = _initialRoundCount;
     });
     _saveSessionCount();
   }
@@ -362,11 +363,6 @@ class _MainScreenState extends State<MainScreen>
   void _saveSessionCount() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('sessionCount', _sessionCount);
-  }
-
-  void _saveRoundCount() async {
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setInt('roundCount', _roundCount);
   }
 
   String _formatTime(int totalSeconds) {
@@ -638,7 +634,8 @@ class _MainScreenState extends State<MainScreen>
                         _breakMinutes = 0;
                         _breakSeconds = 5;
                         _totalSeconds = _workMinutes * 60 + _workSeconds;
-                        _roundCount = 2;
+                        _initialRoundCount = 2;
+                        _roundCount = _initialRoundCount;
                       });
                     },
                     child: const Text('Test Durations'),
