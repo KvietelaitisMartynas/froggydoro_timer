@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:froggydoro/notifications.dart';
 import 'package:froggydoro/screens/main_screen.dart';
+import 'package:froggydoro/services/database_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -14,6 +15,8 @@ void main() async {
   // Initialize timezone data
   tz.initializeTimeZones();
 
+  final DatabaseService _databaseService = DatabaseService.instance;
+
   // Initialize notifications
   final notifications = Notifications();
   await notifications.init();
@@ -22,13 +25,27 @@ void main() async {
   final wasActive = prefs.getBool('wasActive') ?? false;
 
   if (!wasActive) {
-    final prefs = await SharedPreferences.getInstance();
-    final workTime = prefs.getInt('workTime') ?? 25;
-    await prefs.setInt('totalSeconds', workTime * 60);
-    await prefs.setInt('remainingTime', workTime * 60);
+    // Check if a timer is picked in the database
+    final pickedTimer = await _databaseService.getPickedTimer();
+
+    if (pickedTimer != null) {
+      // Use the picked timer's settings
+      await prefs.setInt('workMinutes', pickedTimer.workDuration);
+      await prefs.setInt('breakMinutes', pickedTimer.breakDuration);
+      await prefs.setInt('totalSeconds', pickedTimer.workDuration * 60);
+      await prefs.setInt('remainingTime', pickedTimer.workDuration * 60);
+    } else {
+      // Fall back to default values
+      final workTime = prefs.getInt('workMinutes') ?? 25;
+      final breakTime = prefs.getInt('breakMinutes') ?? 5;
+      await prefs.setInt('totalSeconds', workTime * 60);
+      await prefs.setInt('remainingTime', workTime * 60);
+    }
+
+    // Reset other timer states
     await prefs.setBool('isRunning', false);
     await prefs.setBool('isBreakTime', false);
-    await prefs.setBool("hasStarted", false);
+    await prefs.setBool('hasStarted', false);
   }
 
   // Mark as active again

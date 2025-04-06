@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:froggydoro/models/timerObject.dart';
+import 'package:froggydoro/services/database_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../widgets/time_step.dart';
@@ -19,11 +21,13 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
   List<Map<String, dynamic>> _presets = [];
   TextEditingController _presetNameController = TextEditingController();
 
+  final DatabaseService _databaseService = DatabaseService.instance;
+
   @override
   void initState() {
     super.initState();
     _loadTimeSettings();
-    _loadPresets();
+    //_loadPresets();
   }
 
   Future<void> _loadTimeSettings() async {
@@ -45,7 +49,13 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
   Future<void> _savePreset(String name) async {
     final prefs = await SharedPreferences.getInstance();
 
-    final newPreset = {
+    _databaseService.addTimer(
+      name,
+      _workMinutes,
+      _breakMinutes,
+      count: _roundCount,
+    );
+    /* final newPreset = {
       'name': name,
       'workMinutes': _workMinutes,
       'breakMinutes': _breakMinutes,
@@ -62,16 +72,19 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
 
     setState(() {
       _presets.add(newPreset);
-    });
+    }); */
   }
 
-  Future<void> _loadPresets() async {
+  /* Future<void> _loadPresets() async {
     final prefs = await SharedPreferences.getInstance();
     List<String> savedPresets = prefs.getStringList('presets') ?? [];
     List<String> presetValues = prefs.getStringList('presetValues') ?? [];
 
+    List<Timer> timers = await _databaseService.getTimers();
+
     List<Map<String, dynamic>> loadedPresets = [];
-    for (int i = 0; i < savedPresets.length; i++) {
+
+    for (int i = 0; i < timers.length; i++) {
       try {
         Map<String, dynamic> preset = json.decode(presetValues[i]);
         if (preset['name'] != null) {
@@ -85,18 +98,18 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
     setState(() {
       _presets = loadedPresets;
     });
-  }
+  } */
 
-  void _applyPreset(Map<String, dynamic> preset) {
+  void _applyPreset(TimerObject timer) {
     setState(() {
-      _workMinutes = preset['workMinutes'] ?? 25;
-      _breakMinutes = preset['breakMinutes'] ?? 5;
-      _defaultRoundCount = preset['defaultRoundCount'] ?? 4;
+      _workMinutes = timer.workDuration ?? 25;
+      _breakMinutes = timer.breakDuration ?? 5;
+      _roundCount = timer.count ?? 4;
     });
     widget.updateTimer(_workMinutes, 0, _breakMinutes, 0, _defaultRoundCount);
   }
 
-  Future<void> _deletePreset(int index) async {
+  /* Future<void> _deletePreset(int index) async {
     final prefs = await SharedPreferences.getInstance();
     List<String> savedPresets = prefs.getStringList('presets') ?? [];
     List<String> presetValues = prefs.getStringList('presetValues') ?? [];
@@ -110,7 +123,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
     setState(() {
       _presets.removeAt(index);
     });
-  }
+  } */
 
   @override
   Widget build(BuildContext context) {
@@ -161,7 +174,10 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
             ),
             TextField(
               controller: _presetNameController,
-              decoration: const InputDecoration(labelText: "Preset Name"),
+              decoration: const InputDecoration(
+                labelText: "Preset Name",
+                border: OutlineInputBorder(),
+              ),
             ),
             ElevatedButton(
               onPressed: () {
@@ -169,6 +185,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
                   _savePreset(_presetNameController.text);
                   _presetNameController.clear();
                 }
+                setState(() {});
               },
               child: const Text("Save Preset"),
             ),
@@ -177,17 +194,29 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
               "Available Presets:",
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
-            ListView.builder(
-              shrinkWrap: true,
-              itemCount: _presets.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(_presets[index]['name'] ?? 'Unnamed Preset'),
-                  onTap: () => _applyPreset(_presets[index]),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: () => _deletePreset(index),
-                  ),
+            FutureBuilder(
+              future: _databaseService.getTimers(),
+              builder: (context, snapshot) {
+                return ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: snapshot.data?.length ?? 0,
+                  itemBuilder: (context, index) {
+                    TimerObject timer = snapshot.data![index];
+                    return ListTile(
+                      title: Text(timer.name ?? 'Unnamed Preset'),
+                      onTap: () {
+                        _applyPreset(timer);
+                        _databaseService.setPicked(timer.id);
+                      },
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () {
+                          _databaseService.deleteTimer(timer.id);
+                          setState(() {});
+                        },
+                      ),
+                    );
+                  },
                 );
               },
             ),
