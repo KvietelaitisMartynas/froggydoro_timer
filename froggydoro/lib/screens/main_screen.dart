@@ -739,8 +739,12 @@ class _MainScreenState extends State<MainScreen>
                   ),
                   SizedBox(height: screenHeight * 0.02),
                   Image.asset(
-                    'assets/default_froggy_transparent.png',
+                    'assets/froggy.png',
                     height: screenHeight * 0.3,
+                    color:
+                        Theme.of(
+                          context,
+                        ).bottomNavigationBarTheme.selectedItemColor,
                   ),
                   SizedBox(height: screenHeight * 0.02),
                   Text(

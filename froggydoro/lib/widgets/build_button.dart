@@ -23,7 +23,7 @@ class ButtonWidget extends StatelessWidget {
     style: ElevatedButton.styleFrom(
       // Keep your original textStyle, elevation etc.
       // ONLY change minimumSize to fixedSize:
-      fixedSize: Size(width, 50), // <--- THE ONLY STYLE CHANGE
+      fixedSize: Size(width + 10, 50), // <--- THE ONLY STYLE CHANGE
       textStyle: TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.bold,
