@@ -2,11 +2,13 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:froggydoro/models/timerObject.dart';
 import 'package:froggydoro/screens/settings_screen.dart';
-import 'package:froggydoro/widgets/build_button.dart';
+import 'package:froggydoro/widgets/build_button.dart'; // Assuming ButtonWidget is defined here
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:froggydoro/notifications.dart';
 import 'package:froggydoro/widgets/music_Manager.dart';
+import 'package:froggydoro/services/database_service.dart';
 
 class MainScreen extends StatefulWidget {
   final ValueChanged<ThemeMode> onThemeModeChanged;
@@ -28,64 +30,228 @@ class _MainScreenState extends State<MainScreen>
     'com.example.froggydoro/exact_alarm',
   );
 
+  final DatabaseService _databaseService = DatabaseService.instance;
+
   late TabController _tabController;
 
   int _selectedIndex = 0;
-  late int _workMinutes;
+  TimerObject? _timerObject; // Loaded from DB
+  // Default values, will be overwritten by DB or SharedPreferences
+  int _workMinutes = 25;
   int _workSeconds = 0;
-  late int _breakMinutes;
+  int _breakMinutes = 5;
   int _breakSeconds = 0;
-  int _totalSeconds = 0;
+  int _roundCountSetting = 4; // The configured number of rounds
+
+  // State variables
+  int _totalSeconds = 0; // Current remaining seconds
   bool _isBreakTime = false;
-  Timer? _timer;
-  bool _isRunning = false;
-  int _sessionCount = 0;
-  int _roundCount = 4;
-  late int _initialCount;
-  int _maxSeconds = 0;
-  bool _hasStarted = false;
+  Timer? _timer; // The periodic timer (only active in foreground)
+  bool _isRunning = false; // Is the timer conceptually running?
+  int _sessionCount = 0; // Completed work sessions in the current cycle
+  int _currentRound = 1; // Current round number (starts at 1)
+  bool _hasStartedCycle = false; // Has the user explicitly started a cycle?
+  DateTime? _startTimeSaved; // When the current running period started
+  bool _hasStarted =
+      false; // <--- ADDED BACK: Tracks if timer started at least once since reset/load
 
   final Set<int> _scheduledNotifications = {}; // Track scheduled notifications
+
+  // Constants for SharedPreferences keys
+  static const String prefWorkMinutes = 'workMinutes';
+  static const String prefWorkSeconds = 'workSeconds';
+  static const String prefBreakMinutes = 'breakMinutes';
+  static const String prefBreakSeconds = 'breakSeconds';
+  static const String prefRoundCountSetting = 'roundCountSetting';
+  static const String prefRemainingTime = 'remainingTime';
+  static const String prefIsRunning = 'isRunning';
+  static const String prefIsBreakTime = 'isBreakTime';
+  static const String prefHasStartedCycle = 'hasStartedCycle';
+  static const String prefSessionCount = 'sessionCount';
+  static const String prefCurrentRound = 'currentRound';
+  static const String prefStartTime = 'startTime';
+  static const String prefHasStarted =
+      'hasStarted'; // Need to save/load this too
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-
-    // Initialize the TabController with 2 tabs and provide the vsync from the mixin.
     _tabController = TabController(length: 2, vsync: this);
-
-    _loadPreferances();
-
-    // Load the timer state after initializing the TabController
-    _loadTimerState();
+    _initializeAsync(); // Use async initialization
   }
 
-  void _loadPreferances() async {
-    final prefs = await SharedPreferences.getInstance();
+  // Separate async initialization
+  Future<void> _initializeAsync() async {
+    await _loadSettingsAndState();
+    // Ensure UI reflects loaded state
+    if (mounted) {
+      setState(() {});
+    }
+  }
 
-    setState(() {
-      _workMinutes = prefs.getInt('workMinutes') ?? 25;
-      _breakMinutes = prefs.getInt('breakMinutes') ?? 5;
-      _sessionCount = prefs.getInt('sessionCount') ?? 0;
-      _roundCount = prefs.getInt('roundCount') ?? 1;
-      _initialCount = _roundCount;
-      _totalSeconds = _workMinutes * 60;
-      _saveTimerState();
-    });
+  // Load settings from DB/Prefs and restore timer state
+  Future<void> _loadSettingsAndState() async {
+    final prefs = await SharedPreferences.getInstance();
+    print("DEBUG: Loading state..."); // Add logging
+
+    // 1. Load Timer Settings (Same as before)
+    _timerObject = await _databaseService.getPickedTimer();
+    if (_timerObject != null) {
+      // ... load from _timerObject ...
+      _workMinutes = _timerObject!.workDuration;
+      _breakMinutes = _timerObject!.breakDuration;
+      _roundCountSetting = _timerObject!.count;
+      _workSeconds = 0;
+      _breakSeconds = 0;
+      await _saveSettingsToPrefs();
+    } else {
+      // ... load from Prefs ...
+      _workMinutes = prefs.getInt(prefWorkMinutes) ?? 25;
+      _workSeconds = prefs.getInt(prefWorkSeconds) ?? 0;
+      _breakMinutes = prefs.getInt(prefBreakMinutes) ?? 5;
+      _breakSeconds = prefs.getInt(prefBreakSeconds) ?? 0;
+      _roundCountSetting = prefs.getInt(prefRoundCountSetting) ?? 4;
+    }
+
+    // 2. Restore Timer State
+    // Load state variables first, including _isBreakTime which is needed for calculation
+    _isBreakTime = prefs.getBool(prefIsBreakTime) ?? false;
+    _hasStartedCycle = prefs.getBool(prefHasStartedCycle) ?? false;
+    _sessionCount = prefs.getInt(prefSessionCount) ?? 0;
+    _currentRound = prefs.getInt(prefCurrentRound) ?? 1;
+    _hasStarted = prefs.getBool(prefHasStarted) ?? false;
+
+    final savedIsRunning = prefs.getBool(prefIsRunning) ?? false;
+    final startTimeString = prefs.getString(prefStartTime);
+    final savedRemainingTime = prefs.getInt(
+      prefRemainingTime,
+    ); // We might not even need this anymore
+
+    print(
+      "DEBUG: Loaded Prefs - savedIsRunning: $savedIsRunning, startTime: $startTimeString, isBreak: $_isBreakTime, hasStarted: $_hasStarted",
+    );
+
+    int newTotalSeconds;
+    bool newIsRunning = savedIsRunning; // Assume saved running state initially
+
+    if (savedIsRunning && startTimeString != null) {
+      _startTimeSaved = DateTime.parse(startTimeString);
+      final DateTime resumeTime = DateTime.now();
+      final int totalElapsedSinceStart =
+          resumeTime.difference(_startTimeSaved!).inSeconds;
+
+      // Determine the initial duration of the segment that was running
+      final int initialDurationOfSegment =
+          _isBreakTime
+              ? (_breakMinutes * 60 + _breakSeconds)
+              : (_workMinutes * 60 + _workSeconds);
+
+      // Calculate the *actual* remaining time
+      newTotalSeconds = initialDurationOfSegment - totalElapsedSinceStart;
+
+      if (newTotalSeconds <= 0) {
+        newTotalSeconds = 0;
+        newIsRunning = false; // Timer finished while backgrounded
+      }
+    } else if (savedRemainingTime != null && _hasStarted) {
+      // Timer was paused, restore saved time directly
+      newTotalSeconds = savedRemainingTime;
+      newIsRunning = false; // Ensure it's marked as not running
+    } else {
+      // No valid saved state, or cycle not started, initialize to work time
+      newTotalSeconds = _workMinutes * 60 + _workSeconds;
+      _isBreakTime = false; // Ensure starting with work time
+      newIsRunning = false;
+      _hasStartedCycle = false;
+      _hasStarted = false; // Reset cycle state if no valid save
+      _currentRound = 1;
+      _sessionCount = 0;
+      _startTimeSaved = null; // Ensure start time is cleared
+    }
+
+    // Apply the calculated state ONLY IF MOUNTED
+    if (mounted) {
+      setState(() {
+        _totalSeconds = newTotalSeconds;
+        _isRunning = newIsRunning; // Update the state variable
+      });
+
+      // If the timer finished while inactive, handle the completion AFTER state is set
+      if (savedIsRunning && startTimeString != null && newTotalSeconds <= 0) {
+        // Use addPostFrameCallback to ensure build is complete before showing popup potentially
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            // Check mounted again inside callback
+            _handleTimerCompletion(triggeredByLoad: true);
+          }
+        });
+      } else if (_isRunning) {
+        // If the timer should still be running, restart the periodic timer
+        print("DEBUG: Timer should be running, starting periodic timer.");
+        _startPeriodicTimer();
+      } else {
+        print("DEBUG: Timer is not running, no periodic timer started.");
+      }
+    } else {
+      print("DEBUG: State not set because widget is not mounted.");
+      // If not mounted, just update the instance variables directly
+      // This might happen if load finishes after dispose but before async gap completes
+      _totalSeconds = newTotalSeconds;
+      _isRunning = newIsRunning;
+    }
+  }
+
+  // Save only the timer *state* (not settings)
+  Future<void> _saveTimerState() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(prefRemainingTime, _totalSeconds);
+    await prefs.setBool(prefIsRunning, _isRunning);
+    await prefs.setBool(prefIsBreakTime, _isBreakTime);
+    await prefs.setBool(prefHasStartedCycle, _hasStartedCycle);
+    await prefs.setInt(prefSessionCount, _sessionCount);
+    await prefs.setInt(prefCurrentRound, _currentRound);
+    await prefs.setBool(prefHasStarted, _hasStarted); // <-- SAVE _hasStarted
+
+    if (_isRunning && _startTimeSaved != null) {
+      await prefs.setString(prefStartTime, _startTimeSaved!.toIso8601String());
+    } else {
+      await prefs.remove(prefStartTime);
+    }
+  }
+
+  // Save only the timer *settings*
+  Future<void> _saveSettingsToPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(prefWorkMinutes, _workMinutes);
+    await prefs.setInt(prefWorkSeconds, _workSeconds);
+    await prefs.setInt(prefBreakMinutes, _breakMinutes);
+    await prefs.setInt(prefBreakSeconds, _breakSeconds);
+    await prefs.setInt(prefRoundCountSetting, _roundCountSetting);
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
     WidgetsBinding.instance.removeObserver(this);
+    _timer?.cancel();
+    _tabController.dispose();
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _loadTimerState();
+    super.didChangeAppLifecycleState(state);
+    switch (state) {
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.detached:
+      case AppLifecycleState.hidden: // Treat hidden like paused
+        _timer?.cancel();
+        _saveTimerState();
+        break;
+      case AppLifecycleState.resumed:
+        _loadSettingsAndState();
+        break;
     }
   }
 
@@ -96,291 +262,330 @@ class _MainScreenState extends State<MainScreen>
     });
   }
 
-  void _resumeTimer() async {
-    final prefs = await SharedPreferences.getInstance();
-    final startTimeString = prefs.getString('startTime');
+  // Starts the conceptual timer
+  void _startTimer() {
+    if (_isRunning) return;
+    if (_workMinutes == 0 && _workSeconds == 0 && !_isBreakTime) return;
+    if (_breakMinutes == 0 && _breakSeconds == 0 && _isBreakTime) return;
 
-    if (startTimeString != null) {
-      final startTime = DateTime.parse(startTimeString);
-      final remainingSeconds = DateTime.now().difference(startTime).inSeconds;
+    AudioManager().playMusic();
 
-      if (remainingSeconds > 0) {
-        setState(() {
-          _totalSeconds = remainingSeconds;
-          _stopTimer(isReset: false);
-        });
+    _startTimeSaved = DateTime.now();
+    final endTime = _startTimeSaved!.add(Duration(seconds: _totalSeconds));
+
+    setState(() {
+      _isRunning = true;
+      _hasStartedCycle = true;
+      _hasStarted = true; // <-- SET _hasStarted TO TRUE
+    });
+
+    _saveTimerState();
+
+    _cancelScheduledNotifications();
+    if (Platform.isIOS) {
+      try {
+        widget.notifications.scheduleNotification(
+          id: 1,
+          title: _isBreakTime ? 'Break Over!' : 'Work Complete!',
+          body:
+              _isBreakTime ? 'Time to get back to work.' : 'Ready for a break?',
+          scheduledTime: endTime,
+        );
+        _scheduledNotifications.add(1);
+      } catch (e) {
+        print('Error scheduling iOS notification: $e');
       }
+    }
+
+    _startPeriodicTimer();
+  }
+
+  // Starts the actual Timer.periodic for UI updates
+  void _startPeriodicTimer() {
+    _timer?.cancel();
+    if (!_isRunning) return;
+    _timer = Timer.periodic(const Duration(seconds: 1), _tick);
+  }
+
+  // The callback for the periodic timer
+  void _tick(Timer timer) {
+    if (!_isRunning) {
+      timer.cancel();
+      return;
+    }
+    if (_totalSeconds > 0) {
+      setState(() {
+        _totalSeconds--;
+      });
+    } else {
+      timer.cancel();
+      _isRunning = false;
+      _handleTimerCompletion();
     }
   }
 
-  void _saveTimerState() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('remainingTime', _totalSeconds);
-    await prefs.setBool('isRunning', _isRunning);
-    await prefs.setBool('isBreakTime', _isBreakTime);
-    await prefs.setBool("hasStarted", _hasStarted);
+  // Stops (pauses) the conceptual timer
+  void _stopTimer() {
+    if (!_isRunning) return;
+
+    AudioManager().pauseMusic();
+    _timer?.cancel();
+    _cancelScheduledNotifications();
+
+    setState(() {
+      _isRunning = false;
+    });
+
+    _startTimeSaved = null;
+    _saveTimerState();
   }
 
-  void _loadTimerState() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final startTimeString = prefs.getString('startTime');
-      final remainingTime =
-          prefs.getInt('remainingTime') ?? _workMinutes * 60 + _workSeconds;
-      final timeBlock = _isBreakTime ? _breakMinutes : _workMinutes;
+  // Resets the timer to the beginning of the WORK session
+  void _resetTimer() {
+    AudioManager().pauseMusic();
+    _timer?.cancel();
+    _cancelScheduledNotifications();
 
-      if (startTimeString != null && _isRunning) {
-        final startTime = DateTime.parse(startTimeString);
-        final elapsedSeconds = DateTime.now().difference(startTime).inSeconds;
+    setState(() {
+      _isRunning = false;
+      _isBreakTime = false;
+      _hasStartedCycle = false;
+      _hasStarted = false; // <-- SET _hasStarted TO FALSE
+      _totalSeconds = _workMinutes * 60 + _workSeconds;
+      _currentRound = 1;
+      _sessionCount = 0;
+      _startTimeSaved = null;
+    });
 
-        final updatedRemainingTime = remainingTime - elapsedSeconds;
+    _saveTimerState();
+    // Optionally save settings if reset should always use current config
+    // _saveSettingsToPrefs();
+  }
 
+  // Handles the logic when a timer period (work/break) completes
+  void _handleTimerCompletion({bool triggeredByLoad = false}) {
+    _isRunning = false;
+    _startTimeSaved = null;
+    _cancelScheduledNotifications();
+
+    if (Platform.isAndroid) {
+      try {
+        widget.notifications.showNotification(
+          id: 2,
+          title: _isBreakTime ? 'Break Over!' : 'Work Complete!',
+          body:
+              _isBreakTime ? 'Time to get back to work.' : 'Ready for a break?',
+        );
+      } catch (e) {
+        print('Error showing immediate Android notification: $e');
+      }
+    }
+
+    bool wasBreak = _isBreakTime; // Store if the completed timer was a break
+
+    if (wasBreak) {
+      // ---- Break Finished ----
+      _sessionCount++; // Increment session after break
+      setState(() {
+        _isBreakTime = false;
+        _totalSeconds = _workMinutes * 60 + _workSeconds;
+      });
+      _saveTimerState();
+
+      if (!triggeredByLoad && mounted) {
+        _showSessionCompletePopup(
+          context,
+          'Break Over!',
+          'Start Round $_currentRound Work?',
+          _startTimer,
+        );
+      }
+    } else {
+      // ---- Work Finished ----
+      bool isLastRound = _currentRound >= _roundCountSetting;
+
+      setState(() {
+        _isBreakTime = true; // Switch to break mode conceptually
+        _totalSeconds = _breakMinutes * 60 + _breakSeconds;
+      });
+
+      if (isLastRound) {
+        // ---- All Rounds Completed ----
         setState(() {
-          _totalSeconds = updatedRemainingTime > 0 ? updatedRemainingTime : 0;
-          _isRunning =
-              updatedRemainingTime > 0 && (prefs.getBool('isRunning') ?? false);
+          _currentRound = 1;
+          _sessionCount = 0;
+          _hasStartedCycle = false; // Cycle finished
+          // _hasStarted remains true until manual reset
         });
-      } else if (remainingTime != timeBlock && _hasStarted) {
-        _totalSeconds = timeBlock * 60;
-        _isRunning = false;
-        _hasStarted = false;
+        _saveTimerState();
+
+        if (!triggeredByLoad && mounted) {
+          _showSessionCompletePopup(
+            context,
+            'Cycle Complete!',
+            'All $_roundCountSetting rounds finished. Start a long break or reset?',
+            _startTimer,
+            showPause: false,
+          );
+        }
       } else {
-        _totalSeconds = remainingTime;
-        _isRunning = false;
+        // ---- Normal Work Round Completed, Move to Next ----
+        int roundCompleted = _currentRound; // Capture before incrementing
+        setState(() {
+          _currentRound++;
+        });
+        _saveTimerState();
+
+        if (!triggeredByLoad && mounted) {
+          _showSessionCompletePopup(
+            context,
+            'Work Complete!',
+            'Start Break for Round $roundCompleted?',
+            _startTimer,
+          );
+        }
       }
-    } catch (e) {
-      print('Error loading timer state: $e');
     }
   }
 
-  void _updateTimer(int workMinutes, int workSeconds, int breakMinutes, int breakSeconds, int roundCount,) {
+  // Helper to cancel notifications
+  void _cancelScheduledNotifications() {
+    if (Platform.isIOS) {
+      for (int id in _scheduledNotifications) {
+        widget.notifications.cancelNotification(id).catchError((e) {
+          print("Error cancelling notification $id: $e");
+        });
+      }
+      _scheduledNotifications.clear();
+    }
+    // Add cancellation for Android exact alarms if you implement them
+  }
+
+  // Update settings from SettingsScreen
+  void _updateSettings(
+    int workMinutes,
+    int workSeconds,
+    int breakMinutes,
+    int breakSeconds,
+    int roundCount,
+  ) {
     setState(() {
       _workMinutes = workMinutes;
       _workSeconds = workSeconds;
       _breakMinutes = breakMinutes;
       _breakSeconds = breakSeconds;
-      _roundCount = roundCount;
-      if (_isBreakTime) {
-        _totalSeconds = _breakMinutes * 60 + _breakSeconds;
-      } else {
-        _totalSeconds = _workMinutes * 60 + _workSeconds;
+      _roundCountSetting = roundCount;
+
+      if (!_isRunning) {
+        _resetTimer(); // Reset state to apply new settings immediately if paused/stopped
       }
+      // If running, settings will apply on next cycle/reset
     });
-    _resetTimer();
+    _saveSettingsToPrefs();
+    if (!_isRunning) _saveTimerState();
   }
 
-  Future<bool> isExactAlarmPermissionGranted() async {
-    if (Platform.isAndroid) {
-      try {
-        final bool isGranted = await _channel.invokeMethod(
-          'isExactAlarmPermissionGranted',
-        );
-        return isGranted;
-      } on PlatformException catch (e) {
-        print('Failed to check exact alarm permission: ${e.message}');
-      }
-    }
-    return false;
-  }
-
-  Future<void> requestExactAlarmPermission() async {
-    if (Platform.isAndroid) {
-      try {
-        final isGranted = await isExactAlarmPermissionGranted();
-        if (!isGranted) {
-          await _channel.invokeMethod('requestExactAlarmPermission');
-        }
-      } on PlatformException catch (e) {
-        print('Failed to request exact alarm permission: ${e.message}');
-      }
-    }
-  }
-
-  void _startTimer() async {
-    if (_isRunning || (_workMinutes == 0 && _workSeconds == 0)) return;
-
-    AudioManager().playMusic();
-
-    final prefs = await SharedPreferences.getInstance();
-    final startTime = DateTime.now();
-    final endTime = startTime.add(Duration(seconds: _totalSeconds));
-
-    setState(() {
-      _isRunning = true;
-    });
-
-    await prefs.setString('startTime', startTime.toIso8601String());
-    await prefs.setInt('remainingTime', _totalSeconds);
-    await prefs.setBool('isRunning', true);
-
-    if (Platform.isIOS) {
-      // Schedule notifications only on iOS
-      try {
-        await widget.notifications.scheduleNotification(
-          id: 1,
-          title: _isBreakTime ? 'Break is over!' : 'Work time is over!',
-          body: _isBreakTime ? 'Back to work!' : 'Start your break now!',
-          scheduledTime: endTime,
-        );
-        _scheduledNotifications.add(1);
-      } catch (e) {
-        print('Error scheduling notification: $e');
-      }
-    }
-
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_totalSeconds > 0) {
-        setState(() {
-          _totalSeconds--;
-        });
-      } else {
-        _stopTimer(isReset: false);
-      }
-    });
-  }
-
-  void _stopTimer({bool isReset = false}) async {
-    AudioManager().pauseMusic();
-    _timer?.cancel();
-    final prefs = await SharedPreferences.getInstance();
-
-    setState(() {
-      _isRunning = false;
-    });
-
-    await prefs.setBool('isRunning', false);
-    await prefs.setInt('remainingTime', _totalSeconds);
-
-    if (Platform.isIOS && _totalSeconds != 0) {
-      // Cancel notifications only on iOS
-      try {
-        if (_scheduledNotifications.contains(1)) {
-          await widget.notifications.cancelNotification(1);
-          _scheduledNotifications.remove(1);
-        }
-      } catch (e) {
-        print('Error canceling notification: $e');
-      }
-    } else if (Platform.isAndroid && !isReset && _totalSeconds == 0) {
-      // Show an immediate notification on Android only if not resetting
-      try {
-        await widget.notifications.showNotification(
-          id: 2,
-          title: _isBreakTime ? 'Work time!' : 'Break time!',
-          body:
-              _isBreakTime
-                  ? 'Your break has ended!'
-                  : 'You can finish your work!',
-        );
-      } catch (e) {
-        print('Error displaying notification on Android: $e');
-      }
-    }
-
-    if (_totalSeconds == 0) {
-      if (_isBreakTime) {
-        _sessionCount++;
-        _saveSessionCount();
-
-        _showSessionCompletePopup(context, 
-          'Your break is over!', 
-          'Start your work session',
-          _restartWorkTime, 
-        );
-      } else {
-        setState((){
-          if (_roundCount > 0) {
-            _roundCount--;
-          }
-        });
-        _saveRoundCount();
-
-        if (_roundCount == 0) {
-          _showSessionCompletePopup(
-            context, 
-            'All rounds completed!', 
-            'Take a long rest',
-            () {
-              _resetTimer();
-              _roundCount = _initialCount;
-              _saveRoundCount();
-            },
-          );
-        } else {
-          _showSessionCompletePopup(
-            context, 
-            'Your work session is over!', 
-            'Start your break',
-            _startBreakTime,
-          );
-        }
-      }
-    }
-
-
-
-  }
-
-  void _resetTimer() {
-    AudioManager().pauseMusic();
-    _stopTimer(isReset: true);
-    setState(() {
-      _isBreakTime = false;
-      _totalSeconds = _workMinutes * 60 + _workSeconds;
-    });
-    _saveSessionCount();
-  }
-
-  void _startBreakTime() {
-    setState(() {
-      _isBreakTime = true;
-      _totalSeconds = _breakMinutes * 60 + _breakSeconds;
-    });
-    _startTimer();
-  }
-
-  void _restartWorkTime() {
-    setState(() {
-      _isBreakTime = false;
-      _totalSeconds = _workMinutes * 60 + _workSeconds;
-    });
-    _startTimer();
-  }
-
-  void _pauseTimer() {
-    _timer?.cancel();
-    setState(() {
-      _isRunning = false;
-      if (_isBreakTime) {
-        _totalSeconds = _breakMinutes * 60 + _breakSeconds;
-      } else {
-        _totalSeconds = _workMinutes * 60 + _workSeconds;
-      }
-    });
-  }
-
-  void _saveSessionCount() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('sessionCount', _sessionCount);
-  }
-
-  void _saveRoundCount() async {
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setInt('roundCount', _roundCount);
-}
-
+  // Format time helper
   String _formatTime(int totalSeconds) {
     int minutes = totalSeconds ~/ 60;
     int seconds = totalSeconds % 60;
     return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
+  // --- Build Methods ---
+
+  // ============================================================
+  // REVERTED buildButtons METHOD (Using _hasStarted logic)
+  // ============================================================
+  Widget buildButtons() {
+    // Calculate maxSeconds based on current mode
+    final _maxSeconds =
+        _isBreakTime
+            ? (_breakMinutes * 60 + _breakSeconds)
+            : (_workMinutes * 60 + _workSeconds);
+
+    // Determine if the timer is at the start or end
+    final isCompleted = _totalSeconds == _maxSeconds || _totalSeconds == 0;
+    final theme = Theme.of(context);
+
+    final buttonColor =
+        theme.brightness == Brightness.dark
+            ? const Color(0xFFB0C8AE)
+            : const Color(0xFF586F51);
+
+    // Show only Start button if timer has never started in this session
+    if (!_hasStarted && !_isRunning) {
+      return ButtonWidget(
+        color: buttonColor,
+        text: 'Start',
+        iconLocation: 'assets/Icons/Play.svg',
+        width: 200, // The original wide width
+        onClicked: () {
+          // Note: _hasStarted is set inside _startTimer now
+          _startTimer();
+        },
+      );
+    }
+
+    // Show Pause/Start and Reset if running OR if paused mid-way
+    return _isRunning || !isCompleted
+        ? Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ButtonWidget(
+              color: buttonColor,
+              // Text changes based on running state
+              text: _isRunning ? 'Stop' : 'Start', // Original used "Stop"
+              iconLocation:
+                  _isRunning
+                      ? 'assets/Icons/Pause.svg'
+                      : 'assets/Icons/Play.svg',
+              width: 120,
+              onClicked: () {
+                // Don't need to manage _hasStarted here, _startTimer/_stopTimer handle it
+                if (_isRunning) {
+                  _stopTimer(); // Use _stopTimer to pause
+                } else {
+                  _startTimer(); // Use _startTimer to resume/start
+                }
+              },
+            ),
+            const SizedBox(width: 20),
+            ButtonWidget(
+              color: buttonColor,
+              text: 'Reset',
+              iconLocation: 'assets/Icons/Rewind.svg',
+              width: 120,
+              onClicked: () {
+                // _resetTimer already sets _hasStarted = false
+                _resetTimer();
+              },
+            ),
+          ],
+        )
+        // Show only Start button if timer is paused AND completed (at 0 or max)
+        : ButtonWidget(
+          color: buttonColor,
+          text: 'Start',
+          iconLocation: 'assets/Icons/Play.svg',
+          width: 200, // The original wide width
+          onClicked: () {
+            // _startTimer handles setting _hasStarted
+            _startTimer();
+          },
+        );
+  }
+  // ============================================================
+  // END OF REVERTED buildButtons METHOD
+  // ============================================================
+
   void _showSessionCompletePopup(
     BuildContext context,
     String messageTitle,
     String messageBody,
-    VoidCallback onPressed,
-  ) {
+    VoidCallback onStartPressed, {
+    bool showPause = true,
+  }) {
     final theme = Theme.of(context);
     final backgroundColor =
         theme.brightness == Brightness.dark
@@ -442,23 +647,24 @@ class _MainScreenState extends State<MainScreen>
                       ),
                       onPressed: () {
                         Navigator.pop(context);
-                        onPressed();
+                        onStartPressed();
                       },
                       child: const Text('Start'),
                     ),
-                    const SizedBox(width: 10),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: buttonColor,
-                        foregroundColor: textColor,
+                    if (showPause) ...[
+                      const SizedBox(width: 10),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: buttonColor,
+                          foregroundColor: textColor,
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          // State is already paused when popup shows
+                        },
+                        child: const Text('Pause'),
                       ),
-                      onPressed: () {
-                        _isBreakTime = !_isBreakTime;
-                        _pauseTimer();
-                        Navigator.pop(context);
-                      },
-                      child: const Text('Pause'),
-                    ),
+                    ],
                   ],
                 ),
               ],
@@ -469,80 +675,16 @@ class _MainScreenState extends State<MainScreen>
     );
   }
 
-  Widget buildButtons() {
-    final isCompleted = _totalSeconds == _maxSeconds || _totalSeconds == 0;
-    final theme = Theme.of(context);
-
-    final buttonColor =
-        theme.brightness == Brightness.dark
-            ? const Color(0xFFB0C8AE)
-            : const Color(0xFF586F51);
-
-    // Show only Start button if timer has never started
-    if (!_hasStarted && !_isRunning) {
-      return ButtonWidget(
-        color: buttonColor,
-        text: 'Start',
-        iconLocation: 'assets/Icons/Play.svg',
-        width: 200,
-        onClicked: () {
-          _hasStarted = true; // Update flag when starting for the first time
-          _startTimer();
-        },
-      );
-    }
-
-    return _isRunning || !isCompleted
-        ? Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ButtonWidget(
-              color: buttonColor,
-              text: _isRunning ? 'Stop' : 'Start',
-              iconLocation:
-                  _isRunning
-                      ? 'assets/Icons/Pause.svg'
-                      : 'assets/Icons/Play.svg',
-              width: 120,
-              onClicked: () {
-                _hasStarted = true;
-                if (_isRunning) {
-                  _stopTimer(isReset: false);
-                } else {
-                  _startTimer();
-                }
-              },
-            ),
-            const SizedBox(width: 20),
-            ButtonWidget(
-              color: buttonColor,
-              text: 'Reset',
-              iconLocation: 'assets/Icons/Rewind.svg',
-              width: 120,
-              onClicked: () {
-                _hasStarted = false;
-                _stopTimer(isReset: true);
-                _resetTimer();
-              },
-            ),
-          ],
-        )
-        : ButtonWidget(
-          color: buttonColor,
-          text: 'Start',
-          iconLocation: 'assets/Icons/Play.svg',
-          width: 200,
-          onClicked: () {
-            _startTimer();
-          },
-        );
-  }
-
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final screenHeight = screenSize.height;
     final screenWidth = screenSize.width;
+
+    // Text for rounds display
+    String roundsText = "Round $_currentRound of $_roundCountSetting";
+    // Use _hasStarted to determine initial round text display might be better
+    if (!_hasStarted && !_isRunning) roundsText = "Configure in Settings";
 
     return Scaffold(
       appBar: AppBar(
@@ -559,7 +701,9 @@ class _MainScreenState extends State<MainScreen>
       ),
       body: TabBarView(
         controller: _tabController,
+        physics: const NeverScrollableScrollPhysics(),
         children: [
+          // Timer View
           Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(
@@ -571,17 +715,23 @@ class _MainScreenState extends State<MainScreen>
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   SizedBox(height: screenHeight * 0.02),
+                  // ============================================================
+                  // REVERTED "Work Time"/"Break Time" Text
+                  // ============================================================
                   Text(
-                    _isBreakTime ? "Break Time" : "Work Time",
+                    _isBreakTime
+                        ? "Break Time"
+                        : "Work Time", // Original simpler logic
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w300,
                       fontStyle: FontStyle.italic,
                       fontSize: screenWidth * 0.06,
                     ),
                   ),
+                  // ============================================================
                   SizedBox(height: screenHeight * 0.02),
                   Text(
-                    "Total work sessions completed: $_sessionCount",
+                    roundsText, // Keep using roundsText
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       fontSize: screenWidth * 0.045,
@@ -601,55 +751,27 @@ class _MainScreenState extends State<MainScreen>
                     ),
                   ),
                   SizedBox(height: screenHeight * 0.02),
-                  Text(
-                    "Rounds left: $_roundCount",
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: screenWidth * 0.045,
-                    ),
-                  ),
+                  buildButtons(), // Use the dynamic button builder
                   SizedBox(height: screenHeight * 0.02),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      buildButtons(),
-                      // ElevatedButton(
-                      //   onPressed: _startTimer,
-                      //   child: const Text('Start'),
-                      // ),
-                      // const SizedBox(width: 10),
-                      // ElevatedButton(
-                      //   onPressed: () => _stopTimer(isReset: true),
-                      //   child: const Text('Stop'),
-                      // ),
-                      // const SizedBox(width: 10),
-                      // ElevatedButton(
-                      //   onPressed: _resetTimer,
-                      //   child: const Text('Reset'),
-                      // ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _workMinutes = 0;
-                        _workSeconds = 10;
-                        _breakMinutes = 0;
-                        _breakSeconds = 5;
-                        _totalSeconds = _workMinutes * 60 + _workSeconds;
-                        _roundCount = 2;
-                      });
-                    },
-                    child: const Text('Test Durations'),
-                  ), 
-                  //SizedBox(height: screenHeight * 0.02),
+                  // Test button (optional)
+                  // ElevatedButton(
+                  //   onPressed: () {
+                  //     setState(() {
+                  //       _workMinutes = 0; _workSeconds = 10;
+                  //       _breakMinutes = 0; _breakSeconds = 5;
+                  //       _roundCountSetting = 2;
+                  //     });
+                  //     _updateSettings(0, 10, 0, 5, 2); // Use updateSettings to apply
+                  //   },
+                  //   child: const Text('Load Test Durations'),
+                  // ),
                 ],
               ),
             ),
           ),
+          // Settings View
           SettingsScreen(
-            updateTimer: _updateTimer,
+            updateTimer: _updateSettings,
             onThemeModeChanged: widget.onThemeModeChanged,
           ),
         ],
@@ -678,5 +800,33 @@ class _MainScreenState extends State<MainScreen>
         ),
       ),
     );
+  }
+
+  // --- Permission Methods (Keep as is) ---
+  Future<bool> isExactAlarmPermissionGranted() async {
+    if (Platform.isAndroid) {
+      try {
+        final bool isGranted = await _channel.invokeMethod(
+          'isExactAlarmPermissionGranted',
+        );
+        return isGranted;
+      } on PlatformException catch (e) {
+        print('Failed to check exact alarm permission: ${e.message}');
+      }
+    }
+    return false;
+  }
+
+  Future<void> requestExactAlarmPermission() async {
+    if (Platform.isAndroid) {
+      try {
+        final isGranted = await isExactAlarmPermissionGranted();
+        if (!isGranted) {
+          await _channel.invokeMethod('requestExactAlarmPermission');
+        }
+      } on PlatformException catch (e) {
+        print('Failed to request exact alarm permission: ${e.message}');
+      }
+    }
   }
 }
