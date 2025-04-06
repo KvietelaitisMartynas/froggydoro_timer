@@ -53,7 +53,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
       name,
       _workMinutes,
       _breakMinutes,
-      count: _roundCount,
+      count: _defaultRoundCount,
     );
     /* final newPreset = {
       'name': name,
@@ -104,7 +104,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
     setState(() {
       _workMinutes = timer.workDuration ?? 25;
       _breakMinutes = timer.breakDuration ?? 5;
-      _roundCount = timer.count ?? 4;
+      _defaultRoundCount = timer.count ?? 4;
     });
     widget.updateTimer(_workMinutes, 0, _breakMinutes, 0, _defaultRoundCount);
   }
