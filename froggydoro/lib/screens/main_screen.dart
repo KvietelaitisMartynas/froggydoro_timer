@@ -357,7 +357,7 @@ class _MainScreenState extends State<MainScreen>
   await prefs.setInt('roundCount', _roundCount);
 }
 
-  String _formatTime(int totalSeconds) {
+  String formatTime(int totalSeconds) {
     int minutes = totalSeconds ~/ 60;
     int seconds = totalSeconds % 60;
     return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
@@ -513,7 +513,7 @@ class _MainScreenState extends State<MainScreen>
                   ),
                   SizedBox(height: screenHeight * 0.02),
                   Text(
-                    _formatTime(_totalSeconds),
+                    formatTime(_totalSeconds),
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       fontSize: screenWidth * 0.15,
