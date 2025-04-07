@@ -13,11 +13,13 @@ import 'package:froggydoro/services/database_service.dart';
 class MainScreen extends StatefulWidget {
   final ValueChanged<ThemeMode> onThemeModeChanged;
   final Notifications notifications;
+  final DatabaseService databaseService;
 
   const MainScreen({
     super.key,
     required this.onThemeModeChanged,
     required this.notifications,
+    required this.databaseService,
   });
 
   @override
@@ -26,11 +28,10 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen>
     with WidgetsBindingObserver, SingleTickerProviderStateMixin {
+  late final DatabaseService _databaseService;
   static const MethodChannel _channel = MethodChannel(
     'com.example.froggydoro/exact_alarm',
   );
-
-  final DatabaseService _databaseService = DatabaseService.instance;
 
   late TabController _tabController;
 
@@ -77,6 +78,9 @@ class _MainScreenState extends State<MainScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    _databaseService = widget.databaseService;
+
     _tabController = TabController(length: 2, vsync: this);
     _initializeAsync(); // Use async initialization
   }
@@ -284,24 +288,24 @@ class _MainScreenState extends State<MainScreen>
     _cancelScheduledNotifications();
     if (Platform.isIOS) {
       try {
-        if(_currentRound >= _roundCountSetting){
-            widget.notifications.showNotification(
-          id: 4,
-          title: 'Cycle complete',
-          body:
-              'You have finished your planned rounds',
-        );
-        }
-        else{
+        if (_currentRound >= _roundCountSetting) {
+          widget.notifications.showNotification(
+            id: 4,
+            title: 'Cycle complete',
+            body: 'You have finished your planned rounds',
+          );
+        } else {
           widget.notifications.scheduleNotification(
-          id: 1,
-          title: _isBreakTime ? 'Break Over!' : 'Work Complete!',
-          body:
-              _isBreakTime ? 'Time to get back to work.' : 'Ready for a break?',
-          scheduledTime: endTime,
-        );
+            id: 1,
+            title: _isBreakTime ? 'Break Over!' : 'Work Complete!',
+            body:
+                _isBreakTime
+                    ? 'Time to get back to work.'
+                    : 'Ready for a break?',
+            scheduledTime: endTime,
+          );
         }
-        
+
         _scheduledNotifications.add(1);
       } catch (e) {
         print('Error scheduling iOS notification: $e');
@@ -381,21 +385,21 @@ class _MainScreenState extends State<MainScreen>
 
     if (Platform.isAndroid) {
       try {
-        if(_currentRound >= _roundCountSetting){
+        if (_currentRound >= _roundCountSetting) {
           widget.notifications.showNotification(
-          id: 3,
-          title: 'Cycle complete',
-          body:
-              'You have finished your planned rounds',
-        );  
-        }
-        else{
+            id: 3,
+            title: 'Cycle complete',
+            body: 'You have finished your planned rounds',
+          );
+        } else {
           widget.notifications.showNotification(
-          id: 2,
-          title: _isBreakTime ? 'Break Over!' : 'Work Complete!',
-          body:
-              _isBreakTime ? 'Time to get back to work.' : 'Ready for a break?',
-        );
+            id: 2,
+            title: _isBreakTime ? 'Break Over!' : 'Work Complete!',
+            body:
+                _isBreakTime
+                    ? 'Time to get back to work.'
+                    : 'Ready for a break?',
+          );
         }
       } catch (e) {
         print('Error showing immediate Android notification: $e');
@@ -458,7 +462,7 @@ class _MainScreenState extends State<MainScreen>
       } else {
         // ---- Normal Work Round Completed, Move to Next ----
         int roundCompleted = _currentRound; // Capture before incrementing
-        
+
         _saveTimerState();
 
         if (!triggeredByLoad && mounted) {
@@ -668,17 +672,17 @@ class _MainScreenState extends State<MainScreen>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (showStart) ...[
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: buttonColor,
-                        foregroundColor: textColor,
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: buttonColor,
+                          foregroundColor: textColor,
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          onStartPressed();
+                        },
+                        child: const Text('Start'),
                       ),
-                      onPressed: () {
-                        Navigator.pop(context);
-                        onStartPressed();
-                      },
-                      child: const Text('Start'),
-                    ),
                     ],
                     if (showPause) ...[
                       const SizedBox(width: 10),
@@ -802,17 +806,25 @@ class _MainScreenState extends State<MainScreen>
                   buildButtons(), // Use the dynamic button builder
                   SizedBox(height: screenHeight * 0.02),
                   // Test button (optional)
-                  // ElevatedButton(
-                  //   onPressed: () {
-                  //     setState(() {
-                  //       _workMinutes = 0; _workSeconds = 10;
-                  //       _breakMinutes = 0; _breakSeconds = 5;
-                  //       _roundCountSetting = 2;
-                  //     });
-                  //     _updateSettings(0, 10, 0, 5, 2); // Use updateSettings to apply
-                  //   },
-                  //   child: const Text('Load Test Durations'),
-                  // ),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _workMinutes = 0;
+                        _workSeconds = 10;
+                        _breakMinutes = 0;
+                        _breakSeconds = 5;
+                        _roundCountSetting = 2;
+                      });
+                      _updateSettings(
+                        0,
+                        10,
+                        0,
+                        5,
+                        2,
+                      ); // Use updateSettings to apply
+                    },
+                    child: const Text('Load Test Durations'),
+                  ),
                 ],
               ),
             ),
@@ -821,6 +833,7 @@ class _MainScreenState extends State<MainScreen>
           SettingsScreen(
             updateTimer: _updateSettings,
             onThemeModeChanged: widget.onThemeModeChanged,
+            databaseService: _databaseService,
           ),
         ],
       ),

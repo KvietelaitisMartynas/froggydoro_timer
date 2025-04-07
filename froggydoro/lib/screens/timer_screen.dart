@@ -1,4 +1,4 @@
-import 'dart:async';
+/* import 'dart:async';
 import 'package:flutter/material.dart';
 
 class TimerScreen extends StatefulWidget {
@@ -120,3 +120,4 @@ class _TimerScreenState extends State<TimerScreen> {
     );
   }
 }
+ */

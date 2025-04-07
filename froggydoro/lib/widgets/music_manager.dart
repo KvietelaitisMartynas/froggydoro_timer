@@ -6,7 +6,7 @@ class AudioManager {
   factory AudioManager() => _instance;
 
   late final AudioPlayer _audioPlayer;
-  String _currentSong = "bonfire";
+  String _currentSong = "none";
 
   AudioManager._internal() {
     _audioPlayer = AudioPlayer();

@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:froggydoro/services/database_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart';
 import 'time_settings_screen.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 class SettingsScreen extends StatefulWidget {
   final Function(int, int, int, int, int) updateTimer;
   final ValueChanged<ThemeMode> onThemeModeChanged;
+  final DatabaseService databaseService;
 
   const SettingsScreen({
     required this.updateTimer,
     required this.onThemeModeChanged,
+    required this.databaseService,
     super.key,
   });
 
@@ -69,10 +73,12 @@ class _DropdownMenuState extends State<_DropdownMenu> {
 class _SettingsScreenState extends State<SettingsScreen> {
   ThemeMode _themeMode = ThemeMode.system;
   bool _isWakeLockEnabled = false;
+  late final DatabaseService _databaseService;
 
   @override
   void initState() {
     super.initState();
+    _databaseService = widget.databaseService;
     _loadThemeMode();
     _loadWakeLock();
     _loadAmbience();
@@ -266,8 +272,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 context,
                 MaterialPageRoute(
                   builder:
-                      (context) =>
-                          TimeSettingsScreen(updateTimer: widget.updateTimer),
+                      (context) => TimeSettingsScreen(
+                        updateTimer: widget.updateTimer,
+                        databaseService: _databaseService,
+                      ),
                 ),
               );
             },

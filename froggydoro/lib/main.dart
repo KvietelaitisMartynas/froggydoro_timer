@@ -64,11 +64,13 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  late final DatabaseService _databaseService;
   ThemeMode _themeMode = ThemeMode.system;
 
   @override
   void initState() {
-    super.initState();
+    _databaseService = DatabaseService.instance;
+    _loadThemeMode();
     _loadThemeMode();
   }
 
@@ -183,6 +185,7 @@ class _MyAppState extends State<MyApp> {
       home: MainScreen(
         onThemeModeChanged: _onThemeModeChanged,
         notifications: widget.notifications,
+        databaseService: _databaseService,
       ),
     );
   }

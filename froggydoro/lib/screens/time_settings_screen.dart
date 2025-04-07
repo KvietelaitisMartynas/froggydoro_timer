@@ -7,8 +7,13 @@ import '../widgets/time_step.dart';
 
 class TimeSettingsScreen extends StatefulWidget {
   final Function(int, int, int, int, int) updateTimer;
+  final DatabaseService databaseService;
 
-  const TimeSettingsScreen({required this.updateTimer, super.key});
+  const TimeSettingsScreen({
+    required this.updateTimer,
+    required this.databaseService,
+    super.key,
+  });
 
   @override
   State<TimeSettingsScreen> createState() => _TimeSettingsScreenState();
@@ -21,11 +26,12 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
   List<Map<String, dynamic>> _presets = [];
   TextEditingController _presetNameController = TextEditingController();
 
-  final DatabaseService _databaseService = DatabaseService.instance;
+  late final DatabaseService _databaseService;
 
   @override
   void initState() {
     super.initState();
+    _databaseService = widget.databaseService;
     _loadTimeSettings();
     //_loadPresets();
   }
