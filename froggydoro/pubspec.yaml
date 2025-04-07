@@ -44,6 +44,7 @@ dependencies:
   permission_handler: ^11.4.0
   flutter_svg: ^2.0.17
   mockito: ^5.4.0
+  build_runner: ^2.4.6
   timezone: ^0.10.0
 
 dev_dependencies:
