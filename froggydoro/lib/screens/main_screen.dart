@@ -783,7 +783,7 @@ class _MainScreenState extends State<MainScreen>
                   ),
                   SizedBox(height: screenHeight * 0.02),
                   Image.asset(
-                    'assets/froggy.png',
+                    _isBreakTime ? 'assets/rest_froggy.png' : 'assets/froggy.png',
                     height: screenHeight * 0.3,
                     color:
                         Theme.of(
@@ -802,17 +802,17 @@ class _MainScreenState extends State<MainScreen>
                   buildButtons(), // Use the dynamic button builder
                   SizedBox(height: screenHeight * 0.02),
                   // Test button (optional)
-                  // ElevatedButton(
-                  //   onPressed: () {
-                  //     setState(() {
-                  //       _workMinutes = 0; _workSeconds = 10;
-                  //       _breakMinutes = 0; _breakSeconds = 5;
-                  //       _roundCountSetting = 2;
-                  //     });
-                  //     _updateSettings(0, 10, 0, 5, 2); // Use updateSettings to apply
-                  //   },
-                  //   child: const Text('Load Test Durations'),
-                  // ),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _workMinutes = 0; _workSeconds = 10;
+                        _breakMinutes = 0; _breakSeconds = 5;
+                        _roundCountSetting = 2;
+                      });
+                      _updateSettings(0, 10, 0, 5, 2); // Use updateSettings to apply
+                    },
+                    child: const Text('Load Test Durations'),
+                   ),
                 ],
               ),
             ),
