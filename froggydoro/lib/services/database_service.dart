@@ -118,7 +118,7 @@ class DatabaseService {
     return null;
   }
 
-  void updateTimer(
+  Future<void> updateTimer(
     int id,
     String name,
     int workDuration,
@@ -148,13 +148,12 @@ class DatabaseService {
     );
   }
 
-  void setPicked(int id) async {
+  Future<void> setPickedTimer(int id) async {
+    // Set all timers to is_picked = 0, then set selected one to 1
     final db = await database;
 
-    // Set is_picked to 0 for all timers
     await db.update(_timersTableName, {_timersColumnIsPicked: 0});
 
-    // Set is_picked to 1 for the selected timer
     await db.update(
       _timersTableName,
       {_timersColumnIsPicked: 1},
