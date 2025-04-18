@@ -284,24 +284,24 @@ class _MainScreenState extends State<MainScreen>
     _cancelScheduledNotifications();
     if (Platform.isIOS) {
       try {
-        if(_currentRound >= _roundCountSetting){
-            widget.notifications.showNotification(
-          id: 4,
-          title: 'Cycle complete',
-          body:
-              'You have finished your planned rounds',
-        );
-        }
-        else{
+        if (_currentRound >= _roundCountSetting) {
+          widget.notifications.showNotification(
+            id: 4,
+            title: 'Cycle complete',
+            body: 'You have finished your planned rounds',
+          );
+        } else {
           widget.notifications.scheduleNotification(
-          id: 1,
-          title: _isBreakTime ? 'Break Over!' : 'Work Complete!',
-          body:
-              _isBreakTime ? 'Time to get back to work.' : 'Ready for a break?',
-          scheduledTime: endTime,
-        );
+            id: 1,
+            title: _isBreakTime ? 'Break Over!' : 'Work Complete!',
+            body:
+                _isBreakTime
+                    ? 'Time to get back to work.'
+                    : 'Ready for a break?',
+            scheduledTime: endTime,
+          );
         }
-        
+
         _scheduledNotifications.add(1);
       } catch (e) {
         print('Error scheduling iOS notification: $e');
@@ -381,21 +381,21 @@ class _MainScreenState extends State<MainScreen>
 
     if (Platform.isAndroid) {
       try {
-        if(_currentRound >= _roundCountSetting){
+        if (_currentRound >= _roundCountSetting) {
           widget.notifications.showNotification(
-          id: 3,
-          title: 'Cycle complete',
-          body:
-              'You have finished your planned rounds',
-        );  
-        }
-        else{
+            id: 3,
+            title: 'Cycle complete',
+            body: 'You have finished your planned rounds',
+          );
+        } else {
           widget.notifications.showNotification(
-          id: 2,
-          title: _isBreakTime ? 'Break Over!' : 'Work Complete!',
-          body:
-              _isBreakTime ? 'Time to get back to work.' : 'Ready for a break?',
-        );
+            id: 2,
+            title: _isBreakTime ? 'Break Over!' : 'Work Complete!',
+            body:
+                _isBreakTime
+                    ? 'Time to get back to work.'
+                    : 'Ready for a break?',
+          );
         }
       } catch (e) {
         print('Error showing immediate Android notification: $e');
@@ -458,7 +458,7 @@ class _MainScreenState extends State<MainScreen>
       } else {
         // ---- Normal Work Round Completed, Move to Next ----
         int roundCompleted = _currentRound; // Capture before incrementing
-        
+
         _saveTimerState();
 
         if (!triggeredByLoad && mounted) {
@@ -522,7 +522,7 @@ class _MainScreenState extends State<MainScreen>
   // ============================================================
   // REVERTED buildButtons METHOD (Using _hasStarted logic)
   // ============================================================
-  Widget buildButtons() {
+  Widget buildButtons(BuildContext context) {
     // Calculate maxSeconds based on current mode
     final _maxSeconds =
         _isBreakTime
@@ -582,8 +582,8 @@ class _MainScreenState extends State<MainScreen>
               iconLocation: 'assets/Icons/Rewind.svg',
               width: 120,
               onClicked: () {
-                // _resetTimer already sets _hasStarted = false
-                _resetTimer();
+                // Call the confirmation dialog instead of _resetTimer directly
+                _showResetConfirmationDialog(context); // <--- MODIFIED HERE
               },
             ),
           ],
@@ -603,6 +603,51 @@ class _MainScreenState extends State<MainScreen>
   // ============================================================
   // END OF REVERTED buildButtons METHOD
   // ============================================================
+
+  // --- Add this new function ---
+  Future<void> _showResetConfirmationDialog(BuildContext context) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // User must tap button to dismiss
+      builder: (BuildContext dialogContext) {
+        // Use different name for context
+        return AlertDialog(
+          title: const Text('Confirm Reset'),
+          content: const SingleChildScrollView(
+            // Use if text might overflow
+            child: ListBody(
+              children: <Widget>[
+                Text('Are you sure you want to reset the timer?'),
+                SizedBox(height: 10),
+                Text(
+                  'This will clear the current progress and return to the start of the first work session.',
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(dialogContext).pop(); // Dismiss the dialog
+              },
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red, // Make reset action more prominent
+              ),
+              child: const Text('Reset'),
+              onPressed: () {
+                Navigator.of(dialogContext).pop(); // Dismiss the dialog
+                _resetTimer(); // Call the actual reset function AFTER closing dialog
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+  // --- End of new function ---
 
   void _showSessionCompletePopup(
     BuildContext context,
@@ -668,17 +713,17 @@ class _MainScreenState extends State<MainScreen>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (showStart) ...[
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: buttonColor,
-                        foregroundColor: textColor,
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: buttonColor,
+                          foregroundColor: textColor,
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          onStartPressed();
+                        },
+                        child: const Text('Start'),
                       ),
-                      onPressed: () {
-                        Navigator.pop(context);
-                        onStartPressed();
-                      },
-                      child: const Text('Start'),
-                    ),
                     ],
                     if (showPause) ...[
                       const SizedBox(width: 10),
@@ -783,7 +828,9 @@ class _MainScreenState extends State<MainScreen>
                   ),
                   SizedBox(height: screenHeight * 0.02),
                   Image.asset(
-                    _isBreakTime ? 'assets/rest_froggy.png' : 'assets/froggy.png',
+                    _isBreakTime
+                        ? 'assets/rest_froggy.png'
+                        : 'assets/froggy.png',
                     height: screenHeight * 0.3,
                     color:
                         Theme.of(
@@ -799,20 +846,28 @@ class _MainScreenState extends State<MainScreen>
                     ),
                   ),
                   SizedBox(height: screenHeight * 0.02),
-                  buildButtons(), // Use the dynamic button builder
+                  buildButtons(context), // Use the dynamic button builder
                   SizedBox(height: screenHeight * 0.02),
                   // Test button (optional)
                   ElevatedButton(
                     onPressed: () {
                       setState(() {
-                        _workMinutes = 0; _workSeconds = 10;
-                        _breakMinutes = 0; _breakSeconds = 5;
+                        _workMinutes = 0;
+                        _workSeconds = 10;
+                        _breakMinutes = 0;
+                        _breakSeconds = 5;
                         _roundCountSetting = 2;
                       });
-                      _updateSettings(0, 10, 0, 5, 2); // Use updateSettings to apply
+                      _updateSettings(
+                        0,
+                        10,
+                        0,
+                        5,
+                        2,
+                      ); // Use updateSettings to apply
                     },
                     child: const Text('Load Test Durations'),
-                   ),
+                  ),
                 ],
               ),
             ),

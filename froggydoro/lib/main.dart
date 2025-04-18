@@ -140,6 +140,15 @@ class _MyAppState extends State<MyApp> {
             ),
           ),
         ),
+        dialogTheme: DialogTheme(
+          backgroundColor: Color(0xFFF1F3E5),
+          titleTextStyle: TextStyle(
+            color: Color(0xFF586F51),
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+          contentTextStyle: TextStyle(color: Color(0xFF586F51), fontSize: 16),
+        ),
       ),
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
@@ -177,6 +186,15 @@ class _MyAppState extends State<MyApp> {
               ), // Border color and width
             ),
           ),
+        ),
+        dialogTheme: DialogTheme(
+          backgroundColor: Color(0xFF3F5738),
+          titleTextStyle: TextStyle(
+            color: Color(0xFFB0C8AE),
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+          contentTextStyle: TextStyle(color: Color(0xFFB0C8AE), fontSize: 16),
         ),
       ),
       themeMode: _themeMode,
