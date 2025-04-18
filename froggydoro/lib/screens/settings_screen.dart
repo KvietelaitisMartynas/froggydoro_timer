@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:froggydoro/models/timerObject.dart';
+import 'package:froggydoro/screens/session_selection_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'time_settings_screen.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:froggydoro/services/database_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   final Function(int, int, int, int, int) updateTimer;
@@ -69,6 +71,8 @@ class _DropdownMenuState extends State<_DropdownMenu> {
 class _SettingsScreenState extends State<SettingsScreen> {
   ThemeMode _themeMode = ThemeMode.system;
   bool _isWakeLockEnabled = false;
+  TimerObject? _selectedPreset;
+  final DatabaseService _databaseService = DatabaseService.instance;
 
   @override
   void initState() {
@@ -76,6 +80,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _loadThemeMode();
     _loadWakeLock();
     _loadAmbience();
+    _loadSelectedPreset();
   }
 
   Future<void> _loadThemeMode() async {
@@ -143,6 +148,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
       WakelockPlus.enable();
     } else {
       WakelockPlus.disable();
+    }
+  }
+
+  Future<void> _loadSelectedPreset() async {
+    final pickedPreset = await _databaseService.getPickedTimer();
+    if (mounted) {
+      setState(() {
+        _selectedPreset = pickedPreset;
+      });
     }
   }
 
@@ -259,17 +273,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
             borderRadius: BorderRadius.circular(10),
           ),
           child: ListTile(
-            title: const Text('Work/Break Time'),
+            title: const Text('Session'),
+            subtitle:
+                _selectedPreset != null
+                    ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [Text("Preset: ${_selectedPreset!.name}")],
+                    )
+                    : const Text("No preset selected"),
             trailing: const Icon(Icons.arrow_forward),
-            onTap: () {
-              Navigator.push(
+            onTap: () async {
+              await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder:
-                      (context) =>
-                          TimeSettingsScreen(updateTimer: widget.updateTimer),
+                      (context) => SessionSelectionScreen(
+                        onSessionChanged: (workDuration, breakDuration, count) {
+                          widget.updateTimer(
+                            workDuration,
+                            breakDuration,
+                            count,
+                            0,
+                            0,
+                          );
+                        },
+                      ),
                 ),
               );
+              await _loadSelectedPreset();
             },
           ),
         ),

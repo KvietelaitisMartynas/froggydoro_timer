@@ -5,7 +5,7 @@ class TimeStep extends StatelessWidget {
   final int value;
   final VoidCallback onIncrement;
   final VoidCallback onDecrement;
-  final String unit;
+  final String? unit;
 
   const TimeStep({
     super.key,
@@ -13,7 +13,7 @@ class TimeStep extends StatelessWidget {
     required this.value,
     required this.onIncrement,
     required this.onDecrement,
-    this.unit = 'min',
+    this.unit,
   });
 
   @override
@@ -30,8 +30,12 @@ class TimeStep extends StatelessWidget {
                 icon: const Icon(Icons.chevron_left),
                 onPressed: onDecrement,
               ),
-              Text('$value ${unit.isNotEmpty ? unit : ''}',
-                  style: const TextStyle(fontSize: 16)),
+              Text(
+                unit != null
+                    ? '$value $unit'
+                    : '$value', // <-- Conditional display
+                style: const TextStyle(fontSize: 16),
+              ),
               IconButton(
                 icon: const Icon(Icons.chevron_right),
                 onPressed: onIncrement,
