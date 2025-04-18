@@ -4,8 +4,7 @@ import '../models/timerObject.dart';
 import '../screens/time_settings_screen.dart';
 
 class SessionSelectionScreen extends StatefulWidget {
-  final void Function(int workDuration, int breakDuration, int count)
-  onSessionChanged;
+  final void Function(int workDuration, int breakDuration, int count) onSessionChanged;
 
   const SessionSelectionScreen({required this.onSessionChanged, super.key});
 
@@ -45,32 +44,90 @@ class _SessionSelectionScreenState extends State<SessionSelectionScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder:
-            (context) => TimeSettingsScreen(
-              preset: preset,
-              updateTimer: (workDuration, breakDuration, count) {
-                setState(() {
-                  final index = _presets.indexWhere((p) => p.id == preset.id);
-                  if (index != -1) {
-                    _presets[index] = TimerObject(
-                      id: preset.id,
-                      name: preset.name,
-                      workDuration: workDuration,
-                      breakDuration: breakDuration,
-                      count: count,
-                    );
-                  }
-                });
-              },
-            ),
+        builder: (context) => TimeSettingsScreen(
+          preset: preset,
+          updateTimer: (workDuration, breakDuration, count, presetName) {
+            setState(() {
+              final index = _presets.indexWhere((p) => p.id == preset.id);
+              if (index != -1) {
+                _presets[index] = TimerObject(
+                  id: preset.id,
+                  name: presetName,
+                  workDuration: workDuration,
+                  breakDuration: breakDuration,
+                  count: count,
+                );
+              }
+            });
+          },
+        ),
       ),
     );
   }
 
+  void _addNewPreset() {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => TimeSettingsScreen(
+        preset: TimerObject(
+          id: 0, // id will be set after saving to the database
+          name: '', // Default name, will be set by the user
+          workDuration: 25, // Default work duration
+          breakDuration: 5, // Default break duration
+          count: 1, // Default round count
+        ),
+        updateTimer: (workDuration, breakDuration, count, presetName) {
+          // This will be called once the user confirms the changes
+          setState(() {
+            // Create new TimerObject with the updated values
+            final newPreset = TimerObject(
+              id: 0, // id will be set by the database
+              name: presetName, // Name from the user input
+              workDuration: workDuration,
+              breakDuration: breakDuration,
+              count: count,
+            );
+
+            // Save the new preset to the database inside TimeSettingsScreen
+            _databaseService.addTimer(
+              newPreset.name, 
+              newPreset.workDuration, 
+              newPreset.breakDuration, 
+              count: newPreset.count
+            ).then((id) {
+              final updatedPreset = newPreset.copyWith(id: id);
+
+              // Add the new preset to the list
+              _presets.add(updatedPreset);
+
+              // Reload the list of presets (optional)
+              _loadPresets();
+            }).catchError((e) {
+              print("Error inserting preset: $e");
+            });
+          });
+        },
+      ),
+    ),
+  );
+}
+
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Select Session Preset")),
+      appBar: AppBar(
+        title: const Text("Select Session Preset"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: _addNewPreset,
+          ),
+        ],
+      ),
       body: ListView.builder(
         itemCount: _presets.length,
         itemBuilder: (context, index) {
@@ -101,8 +158,7 @@ class _SessionSelectionScreenState extends State<SessionSelectionScreen> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.edit, color: Colors.blue),
-                    onPressed:
-                        () => _editPreset(preset),
+                    onPressed: () => _editPreset(preset),
                   ),
                 ],
               ),

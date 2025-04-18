@@ -59,7 +59,7 @@ class DatabaseService {
     return database;
   }
 
-  void addTimer(
+  Future<int> addTimer(
     String name,
     int workDuration,
     int breakDuration, {
@@ -67,13 +67,14 @@ class DatabaseService {
     int isPicked = 0,
   }) async {
     final db = await database;
-    await db.insert(_timersTableName, {
+    final id = await db.insert(_timersTableName, {
       _timersColumnName: name,
       _timersColumnWorkDuration: workDuration,
       _timersColumnBreakDuration: breakDuration,
       _timersColumnCount: count,
       _timersColumnIsPicked: isPicked,
     });
+    return id;
   }
 
   Future<List<TimerObject>> getTimers() async {
