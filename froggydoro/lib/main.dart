@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:froggydoro/notifications.dart';
 import 'package:froggydoro/screens/main_screen.dart';
+import 'package:froggydoro/services/database_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -14,9 +15,41 @@ void main() async {
   // Initialize timezone data
   tz.initializeTimeZones();
 
+  final DatabaseService _databaseService = DatabaseService.instance;
+
   // Initialize notifications
   final notifications = Notifications();
   await notifications.init();
+
+  final prefs = await SharedPreferences.getInstance();
+  final wasActive = prefs.getBool('wasActive') ?? false;
+
+  if (!wasActive) {
+    // Check if a timer is picked in the database
+    final pickedTimer = await _databaseService.getPickedTimer();
+
+    if (pickedTimer != null) {
+      // Use the picked timer's settings
+      await prefs.setInt('workMinutes', pickedTimer.workDuration);
+      await prefs.setInt('breakMinutes', pickedTimer.breakDuration);
+      await prefs.setInt('totalSeconds', pickedTimer.workDuration * 60);
+      await prefs.setInt('remainingTime', pickedTimer.workDuration * 60);
+    } else {
+      // Fall back to default values
+      final workTime = prefs.getInt('workMinutes') ?? 25;
+      final breakTime = prefs.getInt('breakMinutes') ?? 5;
+      await prefs.setInt('totalSeconds', workTime * 60);
+      await prefs.setInt('remainingTime', workTime * 60);
+    }
+
+    // Reset other timer states
+    await prefs.setBool('isRunning', false);
+    await prefs.setBool('isBreakTime', false);
+    await prefs.setBool('hasStarted', false);
+  }
+
+  // Mark as active again
+  prefs.setBool('wasActive', true);
 
   runApp(MyApp(notifications: notifications));
 }
@@ -94,6 +127,19 @@ class _MyAppState extends State<MyApp> {
             color: Color(0xFF586F51),
           ), // Light theme text color
         ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Color(0xFFE4E8CD), // Button color
+            foregroundColor: Color(0xFF586F51), // Text color
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: BorderSide(
+                color: Color(0xFFF1F3E5),
+                width: 1,
+              ), // Border color and width
+            ),
+          ),
+        ),
       ),
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
@@ -118,6 +164,19 @@ class _MyAppState extends State<MyApp> {
           bodyLarge: TextStyle(
             color: Color(0xFFB0C8AE),
           ), // Dark theme text color
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Color(0xFF63805C), // Button color
+            foregroundColor: Color(0xFFB0C8AE), // Text color
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: BorderSide(
+                color: Color(0xFFB0C8AE),
+                width: 1,
+              ), // Border color and width
+            ),
+          ),
         ),
       ),
       themeMode: _themeMode,

@@ -46,6 +46,8 @@ dependencies:
   mockito: ^5.4.0
   build_runner: ^2.4.6
   timezone: ^0.10.0
+  sqflite: ^2.4.2
+  path: ^1.9.1
 
 dev_dependencies:
   flutter_test:
@@ -78,6 +80,11 @@ flutter:
     - assets/chirping.mp3
     - assets/river.mp3
     - assets/rain.mp3
+    - assets/Icons/Pause.svg
+    - assets/Icons/Play.svg
+    - assets/Icons/Rewind.svg
+    - assets/froggy.png
+    - assets/rest_froggy.png
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

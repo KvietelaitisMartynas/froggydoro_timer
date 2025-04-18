@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:froggydoro/screens/settings_screen.dart';
+import 'package:froggydoro/screens/time_settings_screen.dart';
 import 'package:mockito/mockito.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:froggydoro/notifications.dart';
 import 'package:froggydoro/utils.dart';
-import 'package:froggydoro/screens/main_screen.dart';
-
-
 
 class MockUpdateTimer extends Mock {
   void call(
@@ -43,12 +41,10 @@ void main() {
   group('Parametrized tests', () {
     late MockThemeCall mockThemeCall;
     late MockUpdateTimer mockUpdateTimer;
-    late MockNotificationsCall mockNotificationsCall;
 
     setUp(() {
       mockThemeCall = MockThemeCall();
       mockUpdateTimer = MockUpdateTimer();
-      mockNotificationsCall = MockNotificationsCall();
     });
 
     testWidgets('Tests ambience settings parametrized', (tester) async {
@@ -141,22 +137,28 @@ void main() {
       }
     });
 
-    testWidgets('Renders MainScreen', (tester) async {
-      await tester.binding.setSurfaceSize(const Size(1080, 1920));
+    testWidgets('Creates and displays presets (parameterized)', (tester) async {
+      final presetNames = ['Focus Mode', 'Quick Break', 'Long Session'];
 
-      final texts = ['Work Time', 'Start', 'Stop', 'Reset'];
+      for (var name in presetNames) {
+        SharedPreferences.setMockInitialValues({});
+        await SharedPreferences.getInstance();
 
-      for (final text in texts) {
         await tester.pumpWidget(
           MaterialApp(
-            home: MainScreen(
-              onThemeModeChanged: mockThemeCall.call,
-              notifications: mockNotificationsCall,
-            ),
+            home: TimeSettingsScreen(updateTimer: mockUpdateTimer.call),
           ),
         );
+        await tester.pumpAndSettle();
 
-        expect(find.text(text), findsOneWidget);
+        final presetNameField = find.byType(TextField);
+        await tester.enterText(presetNameField, name);
+
+        final saveButton = find.widgetWithText(ElevatedButton, 'Save Preset');
+        await tester.tap(saveButton);
+        await tester.pumpAndSettle();
+
+        expect(find.text(name), findsOneWidget);
       }
     });
   });
