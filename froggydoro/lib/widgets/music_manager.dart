@@ -1,29 +1,37 @@
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart';
 import 'package:froggydoro/screens/settings_screen.dart';
 
 class AudioManager {
-  static final AudioManager _instance = AudioManager._internal();
-  factory AudioManager() => _instance;
+  static AudioManager? instance;
+  final AudioPlayer _audioPlayer;
 
-  late final AudioPlayer _audioPlayer;
-  String _currentSong = "bonfire";
-
-  AudioManager._internal() {
-    _audioPlayer = AudioPlayer();
+  factory AudioManager({AudioPlayer? player}) {
+    instance ??= AudioManager.internal(player ?? AudioPlayer());
+    return instance!;
   }
+
+  AudioManager.internal(this._audioPlayer);
+
+  @visibleForTesting
+  static void overrideInstance(AudioManager testInstance) {
+    instance = testInstance;
+  }
+
+  String currentSong = "None";
 
   Future<void> playMusic([String? newSong]) async {
     newSong ??= await SettingsScreen.getAmbience();
-    if (newSong == "None" || _currentSong == "None") {
+    if (newSong == "None" || currentSong == "None") {
       return;
     }
-    _currentSong = newSong.toLowerCase();
+    currentSong = newSong.toLowerCase();
 
     await _audioPlayer.stop();
     await _audioPlayer.setReleaseMode(ReleaseMode.loop);
     await _audioPlayer.setVolume(0.0);
 
-    await _audioPlayer.play(AssetSource("$_currentSong.mp3"));
+    await _audioPlayer.play(AssetSource("$currentSong.mp3"));
     fadeInMusic();
   }
 

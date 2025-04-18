@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:froggydoro/models/timerObject.dart';
 import 'package:froggydoro/services/database_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 import '../widgets/time_step.dart';
 
 class TimeSettingsScreen extends StatefulWidget {
@@ -18,18 +17,18 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
   int _workMinutes = 25;
   int _breakMinutes = 5;
   int _defaultRoundCount = 4;
-  List<Map<String, dynamic>> _presets = [];
-  TextEditingController _presetNameController = TextEditingController();
+  final TextEditingController _presetNameController = TextEditingController();
 
   final DatabaseService _databaseService = DatabaseService.instance;
 
+  // Initializes the state and loads time settings from shared preferences
   @override
   void initState() {
     super.initState();
     _loadTimeSettings();
-    //_loadPresets();
   }
 
+  // Loads the time settings from shared preferences
   Future<void> _loadTimeSettings() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -39,6 +38,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
     });
   }
 
+  // Saves the time settings to shared preferences
   Future<void> _saveTimeSettings() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('workMinutes', _workMinutes);
@@ -46,85 +46,27 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
     await prefs.setInt('defaultRoundCount', _defaultRoundCount);
   }
 
+  // Saves the preset to the database with the given name
   Future<void> _savePreset(String name) async {
-    final prefs = await SharedPreferences.getInstance();
-
     _databaseService.addTimer(
       name,
       _workMinutes,
       _breakMinutes,
       count: _defaultRoundCount,
     );
-    /* final newPreset = {
-      'name': name,
-      'workMinutes': _workMinutes,
-      'breakMinutes': _breakMinutes,
-      'defaultRoundCount': _defaultRoundCount,
-    };
-
-    List<String> savedPresets = prefs.getStringList('presets') ?? [];
-    savedPresets.add(name);
-    prefs.setStringList('presets', savedPresets);
-
-    List<String> presetValues = prefs.getStringList('presetValues') ?? [];
-    presetValues.add(json.encode(newPreset));
-    prefs.setStringList('presetValues', presetValues);
-
-    setState(() {
-      _presets.add(newPreset);
-    }); */
   }
 
-  /* Future<void> _loadPresets() async {
-    final prefs = await SharedPreferences.getInstance();
-    List<String> savedPresets = prefs.getStringList('presets') ?? [];
-    List<String> presetValues = prefs.getStringList('presetValues') ?? [];
-
-    List<Timer> timers = await _databaseService.getTimers();
-
-    List<Map<String, dynamic>> loadedPresets = [];
-
-    for (int i = 0; i < timers.length; i++) {
-      try {
-        Map<String, dynamic> preset = json.decode(presetValues[i]);
-        if (preset['name'] != null) {
-          loadedPresets.add(preset);
-        }
-      } catch (e) {
-        print("Error loading preset: $e");
-      }
-    }
-
-    setState(() {
-      _presets = loadedPresets;
-    });
-  } */
-
+  // Loads the selected preset from the database and applies it to the timer settings
   void _applyPreset(TimerObject timer) {
     setState(() {
-      _workMinutes = timer.workDuration ?? 25;
-      _breakMinutes = timer.breakDuration ?? 5;
-      _defaultRoundCount = timer.count ?? 4;
+      _workMinutes = timer.workDuration;
+      _breakMinutes = timer.breakDuration;
+      _defaultRoundCount = timer.count;
     });
     widget.updateTimer(_workMinutes, 0, _breakMinutes, 0, _defaultRoundCount);
   }
 
-  /* Future<void> _deletePreset(int index) async {
-    final prefs = await SharedPreferences.getInstance();
-    List<String> savedPresets = prefs.getStringList('presets') ?? [];
-    List<String> presetValues = prefs.getStringList('presetValues') ?? [];
-
-    savedPresets.removeAt(index);
-    presetValues.removeAt(index);
-
-    prefs.setStringList('presets', savedPresets);
-    prefs.setStringList('presetValues', presetValues);
-
-    setState(() {
-      _presets.removeAt(index);
-    });
-  } */
-
+  // Interface for the time settings screen
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -203,7 +145,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
                   itemBuilder: (context, index) {
                     TimerObject timer = snapshot.data![index];
                     return ListTile(
-                      title: Text(timer.name ?? 'Unnamed Preset'),
+                      title: Text(timer.name),
                       onTap: () {
                         _applyPreset(timer);
                         _databaseService.setPicked(timer.id);
@@ -226,6 +168,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
     );
   }
 
+  // Increments work time by 5 minutes, up to a maximum of 60 minutes
   void addWorkTime() {
     setState(() {
       if (_workMinutes < 60) {
@@ -234,6 +177,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
     });
   }
 
+  // Decrements work time by 5 minutes, down to a minimum of 5 minutes
   void subtractWorkTime() {
     setState(() {
       if (_workMinutes > 5) {
@@ -242,6 +186,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
     });
   }
 
+  // Increments break time by 5 minutes, up to a maximum of 30 minutes
   void addBreakTime() {
     setState(() {
       if (_breakMinutes < 30) {
@@ -250,6 +195,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
     });
   }
 
+  // Decrements break time by 5 minutes, down to a minimum of 5 minutes
   void subtractBreakTime() {
     setState(() {
       if (_breakMinutes > 5) {
@@ -258,6 +204,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
     });
   }
 
+  // Increments round count by 1, up to a maximum of 10 rounds
   void addRound() {
     setState(() {
       if (_defaultRoundCount < 10) {
@@ -266,6 +213,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
     });
   }
 
+  // Decrements round count by 1, down to a minimum of 1 round
   void subtractRound() {
     setState(() {
       if (_defaultRoundCount > 1) {
@@ -274,6 +222,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
     });
   }
 
+  // Saves the current time settings to shared preferences and updates the timer
   void saveTime() {
     widget.updateTimer(_workMinutes, 0, _breakMinutes, 0, _defaultRoundCount);
     _saveTimeSettings();
