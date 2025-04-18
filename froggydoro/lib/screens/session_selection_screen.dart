@@ -71,25 +71,22 @@ class _SessionSelectionScreenState extends State<SessionSelectionScreen> {
     MaterialPageRoute(
       builder: (context) => TimeSettingsScreen(
         preset: TimerObject(
-          id: 0, // id will be set after saving to the database
-          name: '', // Default name, will be set by the user
-          workDuration: 25, // Default work duration
-          breakDuration: 5, // Default break duration
-          count: 1, // Default round count
+          id: 0,
+          name: '',
+          workDuration: 25,
+          breakDuration: 5,
+          count: 1,
         ),
         updateTimer: (workDuration, breakDuration, count, presetName) {
-          // This will be called once the user confirms the changes
           setState(() {
-            // Create new TimerObject with the updated values
             final newPreset = TimerObject(
-              id: 0, // id will be set by the database
-              name: presetName, // Name from the user input
+              id: 0,
+              name: presetName,
               workDuration: workDuration,
               breakDuration: breakDuration,
               count: count,
             );
 
-            // Save the new preset to the database inside TimeSettingsScreen
             _databaseService.addTimer(
               newPreset.name, 
               newPreset.workDuration, 
@@ -98,10 +95,8 @@ class _SessionSelectionScreenState extends State<SessionSelectionScreen> {
             ).then((id) {
               final updatedPreset = newPreset.copyWith(id: id);
 
-              // Add the new preset to the list
               _presets.add(updatedPreset);
 
-              // Reload the list of presets (optional)
               _loadPresets();
             }).catchError((e) {
               print("Error inserting preset: $e");
