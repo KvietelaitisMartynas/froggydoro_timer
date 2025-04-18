@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import '../models/timerObject.dart';
 import '../services/database_service.dart';
-import '../widgets/time_step.dart';
+import '../widgets/time_step.dart'; // Assuming TimeStep is a custom widget for time control
 
 class TimeSettingsScreen extends StatefulWidget {
   final TimerObject preset;
-  final Function(int workDuration, int breakDuration, int count) updateTimer;
+  final Function(int workDuration, int breakDuration, int count, String presetName) updateTimer;
 
   const TimeSettingsScreen({
     required this.preset,
@@ -25,6 +25,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
   late int _breakDuration;
   late int _count;
 
+  // Initializes the state with the preset values
   @override
   void initState() {
     super.initState();
@@ -34,8 +35,10 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
     _count = widget.preset.count;
   }
 
+  // Saves the changes made to the timer preset
   Future<void> _saveChanges() async {
-    _databaseService.updateTimer(
+    // Update the preset in the database
+    await _databaseService.updateTimer(
       widget.preset.id,
       _nameController.text,
       _workDuration,
@@ -43,13 +46,14 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
       count: _count,
     );
 
-    //await _databaseService.setPickedTimer(widget.preset.id);
+    // Update the timer preset values after saving in the database
+    widget.updateTimer(_workDuration, _breakDuration, _count, _nameController.text);
 
-    widget.updateTimer(_workDuration, _breakDuration, _count);
-
+    // Pop the screen to return to the previous screen
     Navigator.pop(context);
   }
 
+  // Interface for the time settings screen
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -59,35 +63,40 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Preset name text field
             TextField(
               controller: _nameController,
               decoration: const InputDecoration(labelText: "Preset Name"),
             ),
             const SizedBox(height: 16),
+            // TimeStep widget for work duration
             TimeStep(
               label: "Work Duration",
               value: _workDuration,
               unit: "min",
               onIncrement: addWorkTime,
-              onDecrement: subtractWorkTime
+              onDecrement: subtractWorkTime,
             ),
             const SizedBox(height: 16),
+            // TimeStep widget for break duration
             TimeStep(
               label: "Break Duration",
               value: _breakDuration,
               unit: "min",
               onIncrement: addBreakTime,
-              onDecrement: subtractBreakTime
+              onDecrement: subtractBreakTime,
             ),
             const SizedBox(height: 16),
+            // TimeStep widget for round count
             TimeStep(
               label: "Round Count",
               value: _count,
               unit: "rounds",
               onIncrement: addRound,
-              onDecrement: subtractRound
+              onDecrement: subtractRound,
             ),
             const SizedBox(height: 16),
+            // Save changes button
             ElevatedButton(
               onPressed: _saveChanges,
               child: const Text("Save Changes"),
@@ -151,8 +160,4 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
       }
     });
   }
-
-
 }
-
-
