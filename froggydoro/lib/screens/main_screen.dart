@@ -271,7 +271,7 @@ class _MainScreenState extends State<MainScreen>
     AudioManager().playMusic();
 
     _startTimeSaved = DateTime.now();
-    final endTime = _startTimeSaved!.add(Duration(seconds: _totalSeconds));
+    final endTime = _startTimeSaved!.add(Duration(seconds: _totalSeconds + 1));
 
     setState(() {
       _isRunning = true;
@@ -285,10 +285,11 @@ class _MainScreenState extends State<MainScreen>
     if (Platform.isIOS) {
       try {
         if (_currentRound >= _roundCountSetting) {
-          widget.notifications.showNotification(
+          widget.notifications.scheduleNotification(
             id: 4,
             title: 'Cycle complete',
             body: 'You have finished your planned rounds',
+            scheduledTime: endTime,
           );
         } else {
           widget.notifications.scheduleNotification(
@@ -429,27 +430,24 @@ class _MainScreenState extends State<MainScreen>
       // ---- Work Finished ----
       bool isLastRound = _currentRound >= _roundCountSetting;
 
-      setState(() {
-        _isBreakTime = true; // Switch to break mode conceptually
-        _totalSeconds = _breakMinutes * 60 + _breakSeconds;
-      });
-
       if (isLastRound) {
         // ---- All Rounds Completed ----
-        setState(() {
-          _currentRound = 1;
-          _sessionCount = 0;
-          _hasStartedCycle = false; // Cycle finished
-          // _hasStarted remains true until manual reset
-        });
-        _saveTimerState();
 
         if (!triggeredByLoad && mounted) {
           _showSessionCompletePopup(
             context,
             'Cycle Complete!',
             'All $_roundCountSetting rounds finished!',
-            _resetTimer,
+            () {
+              _resetTimer();
+              setState(() {
+                _currentRound = 1;
+                _sessionCount = 0;
+                _hasStartedCycle = false; // Cycle finished
+                // _hasStarted remains true until manual reset
+              });
+              _saveTimerState();
+            },
             showStart: false,
             showPause: false,
             showReset: true,
@@ -457,6 +455,11 @@ class _MainScreenState extends State<MainScreen>
         }
       } else {
         // ---- Normal Work Round Completed, Move to Next ----
+
+        setState(() {
+          _isBreakTime = true; // Switch to break mode conceptually
+          _totalSeconds = _breakMinutes * 60 + _breakSeconds;
+        });
         int roundCompleted = _currentRound; // Capture before incrementing
 
         _saveTimerState();
