@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/timerObject.dart';
 import '../services/database_service.dart';
-import '../widgets/time_step.dart'; // Assuming TimeStep is a custom widget for time control
+import '../widgets/time_step.dart';
 
 class TimeSettingsScreen extends StatefulWidget {
   final TimerObject preset;
@@ -37,7 +37,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
 
   // Saves the changes made to the timer preset
   Future<void> _saveChanges() async {
-    // Update the preset in the database
+    // Updates the preset in the database
     await _databaseService.updateTimer(
       widget.preset.id,
       _nameController.text,
@@ -46,10 +46,10 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
       count: _count,
     );
 
-    // Update the timer preset values after saving in the database
+    // Updates the timer preset values after saving in the database
     widget.updateTimer(_workDuration, _breakDuration, _count, _nameController.text);
 
-    // Pop the screen to return to the previous screen
+    // Pops the screen to return to the previous screen
     Navigator.pop(context);
   }
 
