@@ -291,10 +291,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         onSessionChanged: (workDuration, breakDuration, count) {
                           widget.updateTimer(
                             workDuration,
+                            0,
                             breakDuration,
+                            0,
                             count,
-                            0,
-                            0,
                           );
                         },
                       ),
