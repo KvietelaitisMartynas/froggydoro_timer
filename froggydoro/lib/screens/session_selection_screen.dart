@@ -4,7 +4,8 @@ import '../models/timerObject.dart';
 import '../screens/time_settings_screen.dart';
 
 class SessionSelectionScreen extends StatefulWidget {
-  final void Function(int workDuration, int breakDuration, int count) onSessionChanged;
+  final void Function(int workDuration, int breakDuration, int count)
+  onSessionChanged;
 
   const SessionSelectionScreen({required this.onSessionChanged, super.key});
 
@@ -44,72 +45,119 @@ class _SessionSelectionScreenState extends State<SessionSelectionScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => TimeSettingsScreen(
-          preset: preset,
-          updateTimer: (workDuration, breakDuration, count, presetName) {
-            setState(() {
-              final index = _presets.indexWhere((p) => p.id == preset.id);
-              if (index != -1) {
-                _presets[index] = TimerObject(
-                  id: preset.id,
-                  name: presetName,
-                  workDuration: workDuration,
-                  breakDuration: breakDuration,
-                  count: count,
-                );
-              }
-            });
-          },
-        ),
+        builder:
+            (context) => TimeSettingsScreen(
+              preset: preset,
+              updateTimer: (workDuration, breakDuration, count, presetName) {
+                setState(() {
+                  final index = _presets.indexWhere((p) => p.id == preset.id);
+                  if (index != -1) {
+                    _presets[index] = TimerObject(
+                      id: preset.id,
+                      name: presetName,
+                      workDuration: workDuration,
+                      breakDuration: breakDuration,
+                      count: count,
+                    );
+                  }
+                });
+              },
+            ),
       ),
     );
   }
 
   void _addNewPreset() {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => TimeSettingsScreen(
-        preset: TimerObject(
-          id: 0,
-          name: '',
-          workDuration: 25,
-          breakDuration: 5,
-          count: 1,
-        ),
-        updateTimer: (workDuration, breakDuration, count, presetName) {
-          setState(() {
-            final newPreset = TimerObject(
-              id: 0,
-              name: presetName,
-              workDuration: workDuration,
-              breakDuration: breakDuration,
-              count: count,
-            );
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => TimeSettingsScreen(
+              preset: TimerObject(
+                id: 0,
+                name: '',
+                workDuration: 25,
+                breakDuration: 5,
+                count: 1,
+              ),
+              updateTimer: (workDuration, breakDuration, count, presetName) {
+                setState(() {
+                  final newPreset = TimerObject(
+                    id: 0,
+                    name: presetName,
+                    workDuration: workDuration,
+                    breakDuration: breakDuration,
+                    count: count,
+                  );
 
-            _databaseService.addTimer(
-              newPreset.name, 
-              newPreset.workDuration, 
-              newPreset.breakDuration, 
-              count: newPreset.count
-            ).then((id) {
-              final updatedPreset = newPreset.copyWith(id: id);
+                  _databaseService
+                      .addTimer(
+                        newPreset.name,
+                        newPreset.workDuration,
+                        newPreset.breakDuration,
+                        count: newPreset.count,
+                      )
+                      .then((id) {
+                        final updatedPreset = newPreset.copyWith(id: id);
 
-              _presets.add(updatedPreset);
+                        _presets.add(updatedPreset);
 
-              _loadPresets();
-            }).catchError((e) {
-              print("Error inserting preset: $e");
-            });
-          });
-        },
+                        _loadPresets();
+                      })
+                      .catchError((e) {
+                        print("Error inserting preset: $e");
+                      });
+                });
+              },
+            ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-
-
+  Future<void> _showResetConfirmationDialog(
+    BuildContext context,
+    TimerObject preset,
+  ) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // User must tap button to dismiss
+      builder: (BuildContext dialogContext) {
+        // Use different name for context
+        return AlertDialog(
+          title: const Text('Confirm Deletion'),
+          content: const SingleChildScrollView(
+            // Use if text might overflow
+            child: ListBody(
+              children: <Widget>[
+                Text('Are you sure you want to delete this preset?'),
+                SizedBox(height: 20),
+                Text('This action cannot be undone.'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(dialogContext).pop(); // Dismiss the dialog
+              },
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red, // Make reset action more prominent
+              ),
+              child: const Text('Delete'),
+              onPressed: () {
+                Navigator.of(dialogContext).pop(); // Dismiss the dialog
+                _databaseService.deleteTimer(preset.id);
+                _loadPresets();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -117,10 +165,7 @@ class _SessionSelectionScreenState extends State<SessionSelectionScreen> {
       appBar: AppBar(
         title: const Text("Select Session Preset"),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: _addNewPreset,
-          ),
+          IconButton(icon: const Icon(Icons.add), onPressed: _addNewPreset),
         ],
       ),
       body: ListView.builder(
@@ -130,10 +175,7 @@ class _SessionSelectionScreenState extends State<SessionSelectionScreen> {
           return Container(
             margin: const EdgeInsets.all(8.0),
             decoration: BoxDecoration(
-              border: Border.all(
-                color: Colors.grey,
-                width: 1.0,
-              ),
+              border: Border.all(color: Colors.grey, width: 1.0),
               borderRadius: BorderRadius.circular(8.0),
             ),
             child: ListTile(
@@ -147,8 +189,7 @@ class _SessionSelectionScreenState extends State<SessionSelectionScreen> {
                   IconButton(
                     icon: const Icon(Icons.delete, color: Colors.red),
                     onPressed: () async {
-                      _databaseService.deleteTimer(preset.id);
-                      _loadPresets();
+                      _showResetConfirmationDialog(context, preset);
                     },
                   ),
                   IconButton(
