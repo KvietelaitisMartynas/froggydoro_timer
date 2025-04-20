@@ -121,6 +121,8 @@ class _MyAppState extends State<MyApp> {
           backgroundColor: Color(0xFFF1F3E5),
           selectedItemColor: Color(0xFF586F51),
           unselectedItemColor: Color(0xFFB0C8AE),
+          showSelectedLabels: false, // Hide labels
+          showUnselectedLabels: false,
         ),
         textTheme: const TextTheme(
           bodyLarge: TextStyle(
@@ -168,6 +170,8 @@ class _MyAppState extends State<MyApp> {
           backgroundColor: Color(0xFF3F5738),
           selectedItemColor: Color(0xFFB0C8AE),
           unselectedItemColor: Color(0xFF63805C),
+          showSelectedLabels: false, // Hide labels
+          showUnselectedLabels: false,
         ),
         textTheme: const TextTheme(
           bodyLarge: TextStyle(
