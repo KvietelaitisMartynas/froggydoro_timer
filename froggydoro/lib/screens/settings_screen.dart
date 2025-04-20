@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:froggydoro/models/timerObject.dart';
 import 'package:froggydoro/screens/session_selection_screen.dart';
+import 'package:froggydoro/widgets/settings_tile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:froggydoro/services/database_service.dart';
+import 'package:froggydoro/services/preferences_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   final Function(int, int, int, int, int) updateTimer;
@@ -83,27 +85,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _loadSelectedPreset();
   }
 
+  /// Loads the saved theme mode from shared preferences and updates the state.
   Future<void> _loadThemeMode() async {
     final prefs = await SharedPreferences.getInstance();
     final themeModeString = prefs.getString('themeMode') ?? 'system';
 
     setState(() {
       _themeMode = _getThemeModeFromString(themeModeString);
-      selectedTheme =
-          themeOptions.entries
-              .firstWhere(
-                (entry) => entry.value['value'] == themeModeString,
-                orElse: () => themeOptions.entries.last,
-              )
-              .key;
+      selectedTheme = themeOptions.entries
+          .firstWhere(
+            (entry) => entry.value['value'] == themeModeString,
+            orElse: () => themeOptions.entries.last,
+          )
+          .key;
     });
   }
 
+  /// Saves the selected theme mode to shared preferences.
   Future<void> _saveThemeMode(ThemeMode themeMode) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('themeMode', _getStringFromThemeMode(themeMode));
   }
 
+  /// Converts a string representation of the theme mode to a `ThemeMode` object.
   ThemeMode _getThemeModeFromString(String themeMode) {
     switch (themeMode) {
       case 'light':
@@ -111,11 +115,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       case 'dark':
         return ThemeMode.dark;
       case 'system':
-      default:
         return ThemeMode.system;
+      default:
+        throw ArgumentError('Invalid theme mode: $themeMode');
     }
   }
 
+  /// Converts a `ThemeMode` object to its string representation.
   String _getStringFromThemeMode(ThemeMode themeMode) {
     switch (themeMode) {
       case ThemeMode.light:
@@ -123,14 +129,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       case ThemeMode.dark:
         return 'dark';
       case ThemeMode.system:
-      default:
         return 'system';
     }
   }
 
+  /// Loads the wake lock setting from shared preferences and updates the state.
   void _loadWakeLock() async {
-    final prefs = await SharedPreferences.getInstance();
-    final isWakeLockEnabled = prefs.getBool('isWakeLockEnabled') ?? false;
+    final isWakeLockEnabled = await PreferencesService.loadWakeLock();
     setState(() {
       _isWakeLockEnabled = isWakeLockEnabled;
     });
@@ -141,17 +146,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  /// Saves the wake lock setting to shared preferences and applies it.
   void _saveWakeLock(bool isWakeLockEnabled) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isWakeLockEnabled', isWakeLockEnabled);
-    if (_isWakeLockEnabled) {
+    await PreferencesService.saveWakeLock(isWakeLockEnabled);
+    if (isWakeLockEnabled) {
       WakelockPlus.enable();
     } else {
       WakelockPlus.disable();
     }
   }
 
+  /// Loads the selected timer preset from the database and updates the state.
   Future<void> _loadSelectedPreset() async {
+    if (_selectedPreset != null) return;
     final pickedPreset = await _databaseService.getPickedTimer();
     if (mounted) {
       setState(() {
@@ -167,12 +174,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          Text(
+          const Text(
             'General',
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
-            ), // Make the text bigger
+            ),
           ),
           const SizedBox(height: 10),
           buildChangeThemeSetting(),
@@ -195,6 +202,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   String selectedTheme = 'Follow System';
 
+  /// Builds the UI for changing the theme mode.
   Widget buildChangeThemeSetting() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -204,60 +212,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 10),
-        Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.secondaryContainer,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: ListTile(
-            title: const Text('Theme Mode'),
-            subtitle: Row(
-              children: [
-                Icon(themeOptions[selectedTheme]?['icon'], size: 20),
-                const SizedBox(width: 8),
-                Text(selectedTheme),
-              ],
-            ),
-            trailing: const Icon(Icons.arrow_drop_down),
-            onTap: () {
-              showModalBottomSheet(
-                context: context,
-                builder: (BuildContext context) {
-                  return Container(
-                    padding: const EdgeInsets.all(10),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children:
-                          themeOptions.entries
-                              .map(
-                                (entry) => ListTile(
-                                  leading: Icon(entry.value['icon']),
-                                  title: Text(entry.key),
-                                  onTap: () async {
-                                    setState(() {
-                                      selectedTheme = entry.key;
-                                      _themeMode = _getThemeModeFromString(
-                                        entry.value['value'],
-                                      );
-                                    });
-                                    await _saveThemeMode(_themeMode);
-                                    widget.onThemeModeChanged(_themeMode);
-                                    Navigator.pop(context);
-                                  },
-                                ),
-                              )
-                              .toList(),
-                    ),
-                  );
-                },
-              );
-            },
-          ),
+        SettingsTile(
+          title: 'Theme Mode',
+          subtitle: selectedTheme,
+          trailingIcon: Icons.arrow_drop_down,
+          onTap: () {
+            _showBottomSheet(
+              context: context,
+              children: themeOptions.entries.map((entry) {
+                return ListTile(
+                  leading: Icon(entry.value['icon']),
+                  title: Text(entry.key),
+                  onTap: () async {
+                    setState(() {
+                      selectedTheme = entry.key;
+                      _themeMode = _getThemeModeFromString(entry.value['value']);
+                    });
+                    await _saveThemeMode(_themeMode);
+                    widget.onThemeModeChanged(_themeMode);
+                    Navigator.pop(context);
+                  },
+                );
+              }).toList(),
+            );
+          },
         ),
       ],
     );
   }
 
+  /// Builds the UI for changing the timer preset.
   Widget buildChangeTimeSetting() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -267,47 +251,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 10),
-        Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.secondaryContainer,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: ListTile(
-            title: const Text('Session'),
-            subtitle:
-                _selectedPreset != null
-                    ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [Text("Preset: ${_selectedPreset!.name}")],
-                    )
-                    : const Text("No preset selected"),
-            trailing: const Icon(Icons.arrow_forward),
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder:
-                      (context) => SessionSelectionScreen(
-                        onSessionChanged: (workDuration, breakDuration, count) {
-                          widget.updateTimer(
-                            workDuration,
-                            0,
-                            breakDuration,
-                            0,
-                            count,
-                          );
-                        },
-                      ),
+        SettingsTile(
+          title: 'Session',
+          subtitle: _selectedPreset != null
+              ? "Preset: ${_selectedPreset!.name}"
+              : "No preset selected",
+          trailingIcon: Icons.arrow_forward,
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SessionSelectionScreen(
+                  onSessionChanged: (workDuration, breakDuration, count) {
+                    widget.updateTimer(
+                      workDuration,
+                      0,
+                      breakDuration,
+                      0,
+                      count,
+                    );
+                  },
                 ),
-              );
-              await _loadSelectedPreset();
-            },
-          ),
+              ),
+            );
+            await _loadSelectedPreset();
+          },
         ),
       ],
     );
   }
 
+  /// Builds the UI for toggling the wake lock setting.
   Widget buildChangeWakelockSetting() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -337,22 +311,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  static const String ambienceKey = 'selectedAmbience';
+  static const List<String> ambienceOptions = ["None", "Bonfire", "Chirping", "Rain", "River"];
 
+  /// Saves the selected ambient sound setting to shared preferences.
   Future<void> _saveAmbience(String ambience) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(ambienceKey, ambience);
+    await PreferencesService.saveAmbience(ambience);
   }
 
+  /// Loads the ambient sound setting from shared preferences and updates the state.
   Future<void> _loadAmbience() async {
-    final prefs = await SharedPreferences.getInstance();
+    final ambience = await PreferencesService.loadAmbience();
     setState(() {
-      selectedAmbience = prefs.getString(ambienceKey) ?? 'None';
+      selectedAmbience = ambience;
     });
   }
 
   String selectedAmbience = 'None';
 
+  /// Builds the UI for changing the ambient sound setting.
   Widget buildChangeAmbienceSetting() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -362,46 +338,48 @@ class _SettingsScreenState extends State<SettingsScreen> {
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 10),
-        Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.secondaryContainer,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: ListTile(
-            title: const Text('Ambient Sounds'),
-            subtitle: Text(selectedAmbience),
-            trailing: const Icon(Icons.arrow_drop_down),
-            onTap: () {
-              showModalBottomSheet(
-                context: context,
-                builder: (BuildContext context) {
-                  return Container(
-                    padding: const EdgeInsets.all(10),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children:
-                          ["None", "Bonfire", "Chirping", "Rain", "River"]
-                              .map(
-                                (String value) => ListTile(
-                                  title: Text(value),
-                                  onTap: () async {
-                                    setState(() {
-                                      selectedAmbience = value;
-                                    });
-                                    await _saveAmbience(value);
-                                    Navigator.pop(context);
-                                  },
-                                ),
-                              )
-                              .toList(),
-                    ),
-                  );
-                },
-              );
-            },
-          ),
+        SettingsTile(
+          title: 'Ambient Sounds',
+          subtitle: selectedAmbience,
+          trailingIcon: Icons.arrow_drop_down,
+          onTap: () {
+            _showBottomSheet(
+              context: context,
+              children: ambienceOptions.map((String value) {
+                return ListTile(
+                  title: Text(value),
+                  onTap: () async {
+                    setState(() {
+                      selectedAmbience = value;
+                    });
+                    await _saveAmbience(value);
+                    Navigator.pop(context);
+                  },
+                );
+              }).toList(),
+            );
+          },
         ),
       ],
+    );
+  }
+
+  /// Displays a bottom sheet with the provided list of widgets.
+  void _showBottomSheet({
+    required BuildContext context,
+    required List<Widget> children,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          padding: const EdgeInsets.all(10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: children,
+          ),
+        );
+      },
     );
   }
 }
