@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:froggydoro/notifications.dart';
 import 'package:froggydoro/widgets/music_Manager.dart';
 import 'package:froggydoro/services/database_service.dart';
+import 'package:froggydoro/widgets/dialog_helper.dart';
 
 class MainScreen extends StatefulWidget {
   final ValueChanged<ThemeMode> onThemeModeChanged;
@@ -230,6 +231,7 @@ class _MainScreenState extends State<MainScreen>
     await prefs.setInt(prefRoundCountSetting, _roundCountSetting);
   }
 
+  // Cleans up resources when the widget is removed from the widget tree.
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -238,6 +240,8 @@ class _MainScreenState extends State<MainScreen>
     super.dispose();
   }
 
+  // Handles changes to the app's lifecycle (e.g. paused, resumed).
+  // Saves or restores timer state depending on whether the app is backgrounded or resumed.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
@@ -255,14 +259,29 @@ class _MainScreenState extends State<MainScreen>
     }
   }
 
+  // Called when a bottom navigation item is tapped.
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
       _tabController.animateTo(index);
     });
   }
-
-  // Starts the conceptual timer
+  
+  // Helper to cancel notifications
+  void _cancelScheduledNotifications() {
+    if (Platform.isIOS) {
+      for (int id in _scheduledNotifications) {
+        widget.notifications.cancelNotification(id).catchError((e) {
+          print("Error cancelling notification $id: $e");
+        });
+      }
+      _scheduledNotifications.clear();
+    }
+    // Add cancellation for Android exact alarms if you implement them
+  }
+  
+  // Starts the timer (either a work or break session) and schedules a notification.
+  // Also starts music, updates state, and saves session start time for persistence.
   void _startTimer() {
     if (_isRunning) return;
     if (_workMinutes == 0 && _workSeconds == 0 && !_isBreakTime) return;
@@ -281,6 +300,7 @@ class _MainScreenState extends State<MainScreen>
 
     _saveTimerState();
 
+      // Schedule iOS notification based on session state
     _cancelScheduledNotifications();
     if (Platform.isIOS) {
       try {
@@ -310,6 +330,109 @@ class _MainScreenState extends State<MainScreen>
     }
 
     _startPeriodicTimer();
+  }
+  // Resets the timer and state variables when the entire work/break cycle is complete.
+  // Sets the round and session counters back to initial values and saves state.
+  void _handleCycleCompleteReset() {
+  _resetTimer();
+  setState(() {
+    _currentRound = 1;
+    _sessionCount = 0;
+    _hasStartedCycle = false;
+  });
+  _saveTimerState();
+}
+
+  // Handles the logic when a timer period (work/break) completes
+  void _handleTimerCompletion({bool triggeredByLoad = false}) {
+    _isRunning = false;
+    _startTimeSaved = null;
+    _cancelScheduledNotifications();
+
+    if (Platform.isAndroid) {
+    try {
+      if (_currentRound >= _roundCountSetting) {
+        widget.notifications.showNotification(
+          id: 3,
+          title: 'Cycle complete',
+          body: 'You have finished your planned rounds',
+        );
+      } else {
+        widget.notifications.showNotification(
+          id: 2,
+          title: _isBreakTime ? 'Break Over!' : 'Work Complete!',
+          body: _isBreakTime
+              ? 'Time to get back to work.'
+              : 'Ready for a break?',
+        );
+      }
+      } catch (e) {
+        print('Error showing immediate Android notification: $e');
+      }
+    }
+
+    bool wasBreak = _isBreakTime; // Store if the completed timer was a break
+
+    if (wasBreak) {
+      // ---- Break Finished ----
+      _sessionCount++; // Increment session after break
+      setState(() {
+        _isBreakTime = false;
+        _totalSeconds = _workMinutes * 60 + _workSeconds;
+      });
+      _saveTimerState();
+
+      setState(() {
+        _currentRound++;
+      });
+
+      if (!triggeredByLoad && mounted) {
+        TimerDialogsHelper.showSessionCompletePopup(
+          context: context,
+          messageTitle: 'Break Over!',
+          messageBody: 'Start Round $_currentRound Work?',
+          onStartPressed: _startTimer,
+        );
+      }
+    } else {
+      // ---- Work Finished ----
+      bool isLastRound = _currentRound >= _roundCountSetting;
+
+      if (isLastRound) {
+        // ---- All Rounds Completed ----
+
+        if (!triggeredByLoad && mounted) {
+          TimerDialogsHelper.showSessionCompletePopup(
+            context: context,
+            messageTitle: 'Cycle Complete!',
+            messageBody: 'All $_roundCountSetting rounds finished!',
+            onStartPressed: _handleCycleCompleteReset,
+            showStart: false,
+            showPause: false,
+            showReset: true,
+          );
+        }
+      } else {
+        // ---- Normal Work Round Completed, Move to Next ----
+
+        setState(() {
+          _isBreakTime = true; // Switch to break mode conceptually
+          _totalSeconds = _breakMinutes * 60 + _breakSeconds;
+        });
+        int roundCompleted = _currentRound; // Capture before incrementing
+
+        _saveTimerState();
+
+        if (!triggeredByLoad && mounted) {
+          TimerDialogsHelper.showSessionCompletePopup(
+              context: context,
+              messageTitle: 'Work Complete!',
+              messageBody: 'Start Break for Round $roundCompleted?',
+              onStartPressed: _startTimer,
+          );
+        }
+      }
+    }
   }
 
   // Starts the actual Timer.periodic for UI updates
@@ -374,120 +497,7 @@ class _MainScreenState extends State<MainScreen>
     // _saveSettingsToPrefs();
   }
 
-  // Handles the logic when a timer period (work/break) completes
-  void _handleTimerCompletion({bool triggeredByLoad = false}) {
-    _isRunning = false;
-    _startTimeSaved = null;
-    _cancelScheduledNotifications();
 
-    if (Platform.isAndroid) {
-      try {
-        if (_currentRound >= _roundCountSetting) {
-          widget.notifications.showNotification(
-            id: 3,
-            title: 'Cycle complete',
-            body: 'You have finished your planned rounds',
-          );
-        } else {
-          widget.notifications.showNotification(
-            id: 2,
-            title: _isBreakTime ? 'Break Over!' : 'Work Complete!',
-            body:
-                _isBreakTime
-                    ? 'Time to get back to work.'
-                    : 'Ready for a break?',
-          );
-        }
-      } catch (e) {
-        print('Error showing immediate Android notification: $e');
-      }
-    }
-
-    bool wasBreak = _isBreakTime; // Store if the completed timer was a break
-
-    if (wasBreak) {
-      // ---- Break Finished ----
-      _sessionCount++; // Increment session after break
-      setState(() {
-        _isBreakTime = false;
-        _totalSeconds = _workMinutes * 60 + _workSeconds;
-      });
-      _saveTimerState();
-
-      setState(() {
-        _currentRound++;
-      });
-
-      if (!triggeredByLoad && mounted) {
-        _showSessionCompletePopup(
-          context,
-          'Break Over!',
-          'Start Round $_currentRound Work?',
-          _startTimer,
-        );
-      }
-    } else {
-      // ---- Work Finished ----
-      bool isLastRound = _currentRound >= _roundCountSetting;
-
-      if (isLastRound) {
-        // ---- All Rounds Completed ----
-
-        if (!triggeredByLoad && mounted) {
-          _showSessionCompletePopup(
-            context,
-            'Cycle Complete!',
-            'All $_roundCountSetting rounds finished!',
-            () {
-              _resetTimer();
-              setState(() {
-                _currentRound = 1;
-                _sessionCount = 0;
-                _hasStartedCycle = false; // Cycle finished
-                // _hasStarted remains true until manual reset
-              });
-              _saveTimerState();
-            },
-            showStart: false,
-            showPause: false,
-            showReset: true,
-          );
-        }
-      } else {
-        // ---- Normal Work Round Completed, Move to Next ----
-
-        setState(() {
-          _isBreakTime = true; // Switch to break mode conceptually
-          _totalSeconds = _breakMinutes * 60 + _breakSeconds;
-        });
-        int roundCompleted = _currentRound; // Capture before incrementing
-
-        _saveTimerState();
-
-        if (!triggeredByLoad && mounted) {
-          _showSessionCompletePopup(
-            context,
-            'Work Complete!',
-            'Start Break for Round $roundCompleted?',
-            _startTimer,
-          );
-        }
-      }
-    }
-  }
-
-  // Helper to cancel notifications
-  void _cancelScheduledNotifications() {
-    if (Platform.isIOS) {
-      for (int id in _scheduledNotifications) {
-        widget.notifications.cancelNotification(id).catchError((e) {
-          print("Error cancelling notification $id: $e");
-        });
-      }
-      _scheduledNotifications.clear();
-    }
-    // Add cancellation for Android exact alarms if you implement them
-  }
 
   // Update settings from SettingsScreen
   void _updateSettings(
@@ -586,7 +596,10 @@ class _MainScreenState extends State<MainScreen>
               width: 120,
               onClicked: () {
                 // Call the confirmation dialog instead of _resetTimer directly
-                _showResetConfirmationDialog(context); // <--- MODIFIED HERE
+                TimerDialogsHelper.showResetConfirmationDialog(
+                  context: context,
+                  onConfirmed: _resetTimer,
+                );
               },
             ),
           ],
@@ -607,166 +620,7 @@ class _MainScreenState extends State<MainScreen>
   // END OF REVERTED buildButtons METHOD
   // ============================================================
 
-  // --- Add this new function ---
-  Future<void> _showResetConfirmationDialog(BuildContext context) async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false, // User must tap button to dismiss
-      builder: (BuildContext dialogContext) {
-        // Use different name for context
-        return AlertDialog(
-          title: const Text('Confirm Reset'),
-          content: const SingleChildScrollView(
-            // Use if text might overflow
-            child: ListBody(
-              children: <Widget>[
-                Text('Are you sure you want to reset the timer?'),
-                SizedBox(height: 10),
-                Text(
-                  'This will clear the current progress and return to the start of the first work session.',
-                ),
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(dialogContext).pop(); // Dismiss the dialog
-              },
-            ),
-            TextButton(
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.red, // Make reset action more prominent
-              ),
-              child: const Text('Reset'),
-              onPressed: () {
-                Navigator.of(dialogContext).pop(); // Dismiss the dialog
-                _resetTimer(); // Call the actual reset function AFTER closing dialog
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-  // --- End of new function ---
-
-  void _showSessionCompletePopup(
-    BuildContext context,
-    String messageTitle,
-    String messageBody,
-    VoidCallback onStartPressed, {
-    bool showStart = true,
-    bool showPause = true,
-    bool showReset = false,
-  }) {
-    final theme = Theme.of(context);
-    final backgroundColor =
-        theme.brightness == Brightness.dark
-            ? const Color(0xFF3F5738)
-            : const Color(0xFFF1F3E5);
-    final buttonColor =
-        theme.brightness == Brightness.dark
-            ? const Color(0xFFB0C8AE)
-            : const Color(0xFF586F51);
-    final textColor =
-        theme.brightness == Brightness.dark ? Colors.black : Colors.white;
-
-    showModalBottomSheet(
-      context: context,
-      isDismissible: false,
-      enableDrag: false,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
-      ),
-      builder: (BuildContext context) {
-        final screenWidth = MediaQuery.of(context).size.width;
-
-        return SafeArea(
-          child: Container(
-            width: screenWidth,
-            decoration: BoxDecoration(
-              color: backgroundColor,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(16.0),
-              ),
-            ),
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  messageTitle,
-                  style: const TextStyle(
-                    fontSize: 20.0,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8.0),
-                Text(
-                  messageBody,
-                  style: const TextStyle(fontSize: 16.0),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (showStart) ...[
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: buttonColor,
-                          foregroundColor: textColor,
-                        ),
-                        onPressed: () {
-                          Navigator.pop(context);
-                          onStartPressed();
-                        },
-                        child: const Text('Start'),
-                      ),
-                    ],
-                    if (showPause) ...[
-                      const SizedBox(width: 10),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: buttonColor,
-                          foregroundColor: textColor,
-                        ),
-                        onPressed: () {
-                          Navigator.pop(context);
-                          // State is already paused when popup shows
-                        },
-                        child: const Text('Pause'),
-                      ),
-                    ],
-                    if (showReset) ...[
-                      const SizedBox(width: 10),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: buttonColor,
-                          foregroundColor: textColor,
-                        ),
-                        onPressed: () {
-                          Navigator.pop(context);
-                          onStartPressed();
-                          // State is already paused when popup shows
-                        },
-                        child: const Text('Okay'),
-                      ),
-                    ],
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
+  
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
@@ -909,6 +763,7 @@ class _MainScreenState extends State<MainScreen>
   }
 
   // --- Permission Methods (Keep as is) ---
+  /// Checks whether the app has permission to schedule exact alarms on Android.
   Future<bool> isExactAlarmPermissionGranted() async {
     if (Platform.isAndroid) {
       try {
@@ -923,6 +778,7 @@ class _MainScreenState extends State<MainScreen>
     return false;
   }
 
+  /// Requests permission to schedule exact alarms on Android, if not already granted.
   Future<void> requestExactAlarmPermission() async {
     if (Platform.isAndroid) {
       try {
