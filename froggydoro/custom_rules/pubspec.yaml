@@ -1,0 +1,14 @@
+name: custom_rules
+description: A custom linter to check Dart code.
+version: 0.1.0
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  custom_lint_core: ^0.5.14
+  custom_lint_builder: ^0.5.14
+  analyzer: ^6.0.0
+
+dev_dependencies:
+  custom_lint: any

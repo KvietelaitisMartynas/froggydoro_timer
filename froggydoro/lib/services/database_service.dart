@@ -1,6 +1,6 @@
 import 'package:froggydoro/models/timerObject.dart';
-import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
 
 class DatabaseService {
   static Database? _db;
