@@ -1,50 +1,34 @@
-import 'package:analyzer/dart/ast/ast.dart';
-import 'package:custom_lint_builder/custom_lint_builder.dart';
+import 'package:custom_lint_builder/custom_lint_builder.dart' as custom_lint;
 import 'package:analyzer/error/listener.dart';
+import 'package:analyzer/error/error.dart';
 
-/// This is the entrypoint of our custom linter.
-PluginBase createPlugin() => _ImportSortingLinter();
+custom_lint.PluginBase createPlugin() => _NoTodoCommentsLinter();
 
-/// A plugin class that lists all the custom lints defined by the plugin.
-class _ImportSortingLinter extends PluginBase {
-  /// Listing our custom lint rule.
+class _NoTodoCommentsLinter extends custom_lint.PluginBase {
   @override
-  List<LintRule> getLintRules(CustomLintConfigs configs) => [
-        ImportSortingRule(),
+  List<custom_lint.LintRule> getLintRules(custom_lint.CustomLintConfigs configs) => [
+        NoTodoCommentsRule(),
       ];
 }
 
-class ImportSortingRule extends DartLintRule {
-  // Code metadata for the lint rule.
-  ImportSortingRule() : super(code: _code);
+class NoTodoCommentsRule extends custom_lint.DartLintRule {
+  NoTodoCommentsRule() : super(code: _code);
 
-  static const _code = LintCode(
-    name: 'import_sorting_rule',
-    problemMessage: 'Imports must be sorted alphabetically.',
+  static const _code = custom_lint.LintCode(
+    name: 'no_todo_comments',
+    problemMessage: 'TODO comments are not allowed.',
+    errorSeverity: ErrorSeverity.WARNING,
   );
 
   @override
   void run(
-    CustomLintResolver resolver,
+    custom_lint.CustomLintResolver resolver,
     ErrorReporter reporter,
-    CustomLintContext context,
+    custom_lint.CustomLintContext context,
   ) {
-    // Inspect the entire Dart file for import directives
-    context.registry.addCompilationUnit((node) {
-      final imports = node.directives.whereType<ImportDirective>().toList();
-
-      // Check if any imports are out of order
-      for (var i = 1; i < imports.length; i++) {
-        final prev = imports[i - 1];
-        final curr = imports[i];
-
-        final prevUri = prev.uri.stringValue ?? '';
-        final currUri = curr.uri.stringValue ?? '';
-
-        // If the imports are not alphabetically sorted, report the issue
-        if (prevUri.compareTo(currUri) > 0) {
-          reporter.atNode(curr, _code);
-        }
+    context.registry.addComment((node) {
+      if (node.toSource().contains('TODO')) {
+        reporter.atNode(node, code);
       }
     });
   }

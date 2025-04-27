@@ -1,14 +1,9 @@
+# pubspec.yaml
 name: custom_rules
-description: A custom linter to check Dart code.
-version: 0.1.0
-
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
-  custom_lint_core: ^0.5.14
-  custom_lint_builder: ^0.5.14
-  analyzer: ^6.0.0
-
-dev_dependencies:
-  custom_lint: any
+  analyzer: ^6.4.1
+  analyzer_plugin: ^0.11.3
+  custom_lint_builder: ^0.6.4
