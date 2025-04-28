@@ -11,9 +11,9 @@ import 'package:froggydoro/notifications.dart';
 import 'package:froggydoro/services/database_service.dart';
 import 'package:froggydoro/widgets/dialog_helper.dart';
 
-// TODO: ABAA
-//aaaaa
-//TODO
+// To do: ABAA
+//aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+// To do
 class MainScreen extends StatefulWidget {
   final ValueChanged<ThemeMode> onThemeModeChanged;
   final Notifications notifications;
@@ -94,6 +94,10 @@ class _MainScreenState extends State<MainScreen>
     if (mounted) {
       setState(() {});
     }
+  }
+
+  void test() {
+    var x = 10; // should suggest final
   }
 
   // Load settings from DB/Prefs and restore timer state
