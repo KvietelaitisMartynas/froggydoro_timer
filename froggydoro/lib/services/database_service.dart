@@ -15,6 +15,13 @@ class DatabaseService {
   final String _timersColumnCount = 'count';
   final String _timersColumnIsPicked = 'is_picked';
 
+  final String _calendarEntriesTableName = 'calendar_entries';
+  final String _calendarEntriesColumnId = 'entry_id';
+  final String _calendarEntriesDate = 'date';
+  final String _calendarEntriesDuration = 'duration';
+  final String _calendarEntriesType = 'type';
+  final String _calendarEntriesStatus = 'status';
+
   DatabaseService._constructor();
 
   Future<Database> get database async {
@@ -33,7 +40,7 @@ class DatabaseService {
 
     final database = await openDatabase(
       path,
-      version: 3, // Increment the version
+      version: 4, // Increment the version
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE $_timersTableName (
@@ -45,13 +52,28 @@ class DatabaseService {
             $_timersColumnIsPicked INTEGER DEFAULT 0
           )
         ''');
+
+        await db.execute('''
+          CREATE TABLE $_calendarEntriesTableName (
+            $_calendarEntriesColumnId INTEGER PRIMARY KEY AUTOINCREMENT,
+            $_calendarEntriesDate TEXT NOT NULL,
+            $_calendarEntriesDuration INTEGER NOT NULL,
+            $_calendarEntriesType TEXT NOT NULL,
+            $_calendarEntriesStatus TEXT NOT NULL
+          )
+        ''');
       },
       onUpgrade: (db, oldVersion, newVersion) async {
-        if (oldVersion < 3) {
-          // Add the is_picked column if it doesn't exist
-          await db.execute(
-            'ALTER TABLE $_timersTableName ADD COLUMN $_timersColumnIsPicked INTEGER DEFAULT 0',
-          );
+        if (oldVersion < 4) {
+          await db.execute('''
+          CREATE TABLE $_calendarEntriesTableName (
+            $_calendarEntriesColumnId INTEGER PRIMARY KEY AUTOINCREMENT,
+            $_calendarEntriesDate TEXT NOT NULL,
+            $_calendarEntriesDuration INTEGER NOT NULL,
+            $_calendarEntriesType TEXT NOT NULL,
+            $_calendarEntriesStatus TEXT NOT NULL
+          )
+        ''');
         }
       },
     );
@@ -140,7 +162,7 @@ class DatabaseService {
     );
   }
 
-  void deleteTimer(int id) async {
+  Future<void> deleteTimer(int id) async {
     final db = await database;
     await db.delete(
       _timersTableName,
