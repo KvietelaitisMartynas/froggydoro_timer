@@ -2,18 +2,23 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:froggydoro/models/timerObject.dart';
 import 'package:froggydoro/screens/settings_screen.dart';
+import 'package:froggydoro/models/timerObject.dart';
 import 'package:froggydoro/widgets/build_button.dart'; // Assuming ButtonWidget is defined here
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:froggydoro/notifications.dart';
 import 'package:froggydoro/widgets/music_Manager.dart';
+import 'package:froggydoro/notifications.dart';
 import 'package:froggydoro/services/database_service.dart';
 import 'package:froggydoro/widgets/dialog_helper.dart';
 
+// To do: ABAA
+//aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+// To do
 class MainScreen extends StatefulWidget {
   final ValueChanged<ThemeMode> onThemeModeChanged;
   final Notifications notifications;
+
+  
 
   const MainScreen({
     super.key,
@@ -89,6 +94,10 @@ class _MainScreenState extends State<MainScreen>
     if (mounted) {
       setState(() {});
     }
+  }
+
+  void test() {
+    var x = 10; // should suggest final
   }
 
   // Load settings from DB/Prefs and restore timer state
