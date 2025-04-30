@@ -22,6 +22,18 @@ class DatabaseService {
   final String _calendarEntriesType = 'type';
   final String _calendarEntriesStatus = 'status';
 
+  final String _achievementsTableName = 'achievements';
+  final String _achievementsColumnId = 'achievement_id';
+  final String _achievementsName = 'name';
+  final String _achievementsDescription = 'description';
+  final String _achievementsIconPath = 'path_to_icon';
+  final String _achievementsCriteriaKey = "criteria_key";
+  final String _achievementsCriteriaValue = "criteria_value";
+
+  final String _userAchievementsTableName = 'user_achievements';
+  final String _userAchievementsColumnId = 'user_achievement_id';
+  final String _userAchievementsUnlockDate = 'unlocked_date';
+
   DatabaseService._constructor();
 
   Future<Database> get database async {
@@ -40,7 +52,7 @@ class DatabaseService {
 
     final database = await openDatabase(
       path,
-      version: 4, // Increment the version
+      version: 5, // Increment the version
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE $_timersTableName (
@@ -62,18 +74,48 @@ class DatabaseService {
             $_calendarEntriesStatus TEXT NOT NULL
           )
         ''');
+
+        await db.execute('''
+          CREATE TABLE $_achievementsTableName (
+            $_achievementsColumnId INTEGER PRIMARY KEY AUTOINCREMENT,
+            $_achievementsName TEXT NOT NULL,
+            $_achievementsDescription TEXT NOT NULL,
+            $_achievementsIconPath TEXT,
+            $_achievementsCriteriaKey TEXT NOT NULL,
+            $_achievementsCriteriaValue INTEGER NOT NULL
+          );
+        ''');
+
+        await db.execute('''
+          CREATE TABLE $_userAchievementsTableName (
+            $_userAchievementsColumnId INTEGER PRIMARY KEY AUTOINCREMENT,
+            $_achievementsColumnId INTEGER NOT NULL,
+            $_userAchievementsUnlockDate TEXT NOT NULL,
+            FOREIGN KEY ($_achievementsColumnId) REFERENCES $_achievementsTableName($_achievementsColumnId)
+          );
+        ''');
       },
       onUpgrade: (db, oldVersion, newVersion) async {
-        if (oldVersion < 4) {
+        if (oldVersion < 5) {
           await db.execute('''
-          CREATE TABLE $_calendarEntriesTableName (
-            $_calendarEntriesColumnId INTEGER PRIMARY KEY AUTOINCREMENT,
-            $_calendarEntriesDate TEXT NOT NULL,
-            $_calendarEntriesDuration INTEGER NOT NULL,
-            $_calendarEntriesType TEXT NOT NULL,
-            $_calendarEntriesStatus TEXT NOT NULL
-          )
+          CREATE TABLE $_achievementsTableName (
+            $_achievementsColumnId INTEGER PRIMARY KEY AUTOINCREMENT,
+            $_achievementsName TEXT NOT NULL,
+            $_achievementsDescription TEXT NOT NULL,
+            $_achievementsIconPath TEXT,
+            $_achievementsCriteriaKey TEXT NOT NULL,
+            $_achievementsCriteriaValue INTEGER NOT NULL
+          );
         ''');
+
+          await db.execute('''
+            CREATE TABLE $_userAchievementsTableName (
+              $_userAchievementsColumnId INTEGER PRIMARY KEY AUTOINCREMENT,
+              $_achievementsColumnId INTEGER NOT NULL,
+              $_userAchievementsUnlockDate TEXT NOT NULL,
+              FOREIGN KEY ($_achievementsColumnId) REFERENCES $_achievementsTableName($_achievementsColumnId)
+            );
+          ''');
         }
       },
     );
