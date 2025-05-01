@@ -11,9 +11,6 @@ import 'package:froggydoro/notifications.dart';
 import 'package:froggydoro/services/database_service.dart';
 import 'package:froggydoro/widgets/dialog_helper.dart';
 
-// To do: ABAA
-//aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-// To do
 class MainScreen extends StatefulWidget {
   final ValueChanged<ThemeMode> onThemeModeChanged;
   final Notifications notifications;
@@ -448,11 +445,11 @@ class _MainScreenState extends State<MainScreen>
   void _startPeriodicTimer() {
     _timer?.cancel();
     if (!_isRunning) return;
-    _timer = Timer.periodic(const Duration(seconds: 1), _tick);
+    _timer = Timer.periodic(const Duration(seconds: 1), _timerTick);
   }
 
   // The callback for the periodic timer
-  void _tick(Timer timer) {
+  void _timerTick(Timer timer) {
     if (!_isRunning) {
       timer.cancel();
       return;

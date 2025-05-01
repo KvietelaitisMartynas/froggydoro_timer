@@ -17,7 +17,7 @@ class ImportSortingRule extends custom_lint.DartLintRule {
 
   static const _code = custom_lint.LintCode(
     name: 'import_sorting_rule',
-    problemMessage: 'Imports must be sorted alphabetically. wawawiwa',
+    problemMessage: 'Imports must be sorted alphabetically.',
     errorSeverity: ErrorSeverity.WARNING,
   );
 
