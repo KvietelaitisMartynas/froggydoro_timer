@@ -226,4 +226,47 @@ class DatabaseService {
       whereArgs: [id],
     );
   }
+
+  // Achievement methods
+  Future<List<Map<String, dynamic>>> getAllAchievements() async {
+    final db = await database;
+    return await db.query(_achievementsTableName);
+  }
+
+  Future<List<Map<String, dynamic>>> getUnlockedAchievements() async {
+    final db = await database;
+    return await db.rawQuery('''
+    SELECT a.*, ua.$_userAchievementsUnlockDate 
+    FROM $_achievementsTableName a
+    JOIN $_userAchievementsTableName ua
+    ON a.$_achievementsColumnId = ua.$_achievementsColumnId
+  ''');
+  }
+
+  Future<void> unlockAchievement(int achievementId) async {
+    final db = await database;
+
+    final existing = await db.query(
+      _userAchievementsTableName,
+      where: '$_achievementsColumnId = ?',
+      whereArgs: [achievementId],
+    );
+
+    if (existing.isEmpty) {
+      await db.insert(_userAchievementsTableName, {
+        _achievementsColumnId: achievementId,
+        _userAchievementsUnlockDate: DateTime.now().toIso8601String(),
+      });
+    }
+  }
+
+  Future<bool> isAchievementUnlocked(int achievementId) async {
+    final db = await database;
+    final result = await db.query(
+      _userAchievementsTableName,
+      where: '$_achievementsColumnId = ?',
+      whereArgs: [achievementId],
+    );
+    return result.isNotEmpty;
+  }
 }
