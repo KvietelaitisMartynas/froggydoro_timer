@@ -18,8 +18,6 @@ class MainScreen extends StatefulWidget {
   final ValueChanged<ThemeMode> onThemeModeChanged;
   final Notifications notifications;
 
-  
-
   const MainScreen({
     super.key,
     required this.onThemeModeChanged,
@@ -275,7 +273,7 @@ class _MainScreenState extends State<MainScreen>
       _tabController.animateTo(index);
     });
   }
-  
+
   // Helper to cancel notifications
   void _cancelScheduledNotifications() {
     if (Platform.isIOS) {
@@ -288,7 +286,7 @@ class _MainScreenState extends State<MainScreen>
     }
     // Add cancellation for Android exact alarms if you implement them
   }
-  
+
   // Starts the timer (either a work or break session) and schedules a notification.
   // Also starts music, updates state, and saves session start time for persistence.
   void _startTimer() {
@@ -309,7 +307,7 @@ class _MainScreenState extends State<MainScreen>
 
     _saveTimerState();
 
-      // Schedule iOS notification based on session state
+    // Schedule iOS notification based on session state
     _cancelScheduledNotifications();
     if (Platform.isIOS) {
       try {
@@ -340,17 +338,18 @@ class _MainScreenState extends State<MainScreen>
 
     _startPeriodicTimer();
   }
+
   // Resets the timer and state variables when the entire work/break cycle is complete.
   // Sets the round and session counters back to initial values and saves state.
   void _handleCycleCompleteReset() {
-  _resetTimer();
-  setState(() {
-    _currentRound = 1;
-    _sessionCount = 0;
-    _hasStartedCycle = false;
-  });
-  _saveTimerState();
-}
+    _resetTimer();
+    setState(() {
+      _currentRound = 1;
+      _sessionCount = 0;
+      _hasStartedCycle = false;
+    });
+    _saveTimerState();
+  }
 
   // Handles the logic when a timer period (work/break) completes
   void _handleTimerCompletion({bool triggeredByLoad = false}) {
@@ -359,22 +358,23 @@ class _MainScreenState extends State<MainScreen>
     _cancelScheduledNotifications();
 
     if (Platform.isAndroid) {
-    try {
-      if (_currentRound >= _roundCountSetting) {
-        widget.notifications.showNotification(
-          id: 3,
-          title: 'Cycle complete',
-          body: 'You have finished your planned rounds',
-        );
-      } else {
-        widget.notifications.showNotification(
-          id: 2,
-          title: _isBreakTime ? 'Break Over!' : 'Work Complete!',
-          body: _isBreakTime
-              ? 'Time to get back to work.'
-              : 'Ready for a break?',
-        );
-      }
+      try {
+        if (_currentRound >= _roundCountSetting) {
+          widget.notifications.showNotification(
+            id: 3,
+            title: 'Cycle complete',
+            body: 'You have finished your planned rounds',
+          );
+        } else {
+          widget.notifications.showNotification(
+            id: 2,
+            title: _isBreakTime ? 'Break Over!' : 'Work Complete!',
+            body:
+                _isBreakTime
+                    ? 'Time to get back to work.'
+                    : 'Ready for a break?',
+          );
+        }
       } catch (e) {
         print('Error showing immediate Android notification: $e');
       }
@@ -434,10 +434,10 @@ class _MainScreenState extends State<MainScreen>
 
         if (!triggeredByLoad && mounted) {
           TimerDialogsHelper.showSessionCompletePopup(
-              context: context,
-              messageTitle: 'Work Complete!',
-              messageBody: 'Start Break for Round $roundCompleted?',
-              onStartPressed: _startTimer,
+            context: context,
+            messageTitle: 'Work Complete!',
+            messageBody: 'Start Break for Round $roundCompleted?',
+            onStartPressed: _startTimer,
           );
         }
       }
@@ -506,8 +506,6 @@ class _MainScreenState extends State<MainScreen>
     // _saveSettingsToPrefs();
   }
 
-
-
   // Update settings from SettingsScreen
   void _updateSettings(
     int workMinutes,
@@ -546,13 +544,13 @@ class _MainScreenState extends State<MainScreen>
   // ============================================================
   Widget buildButtons(BuildContext context) {
     // Calculate maxSeconds based on current mode
-    final _maxSeconds =
+    final maxSeconds =
         _isBreakTime
             ? (_breakMinutes * 60 + _breakSeconds)
             : (_workMinutes * 60 + _workSeconds);
 
     // Determine if the timer is at the start or end
-    final isCompleted = _totalSeconds == _maxSeconds || _totalSeconds == 0;
+    final isCompleted = _totalSeconds == maxSeconds || _totalSeconds == 0;
     final theme = Theme.of(context);
 
     final buttonColor =
@@ -629,7 +627,6 @@ class _MainScreenState extends State<MainScreen>
   // END OF REVERTED buildButtons METHOD
   // ============================================================
 
-  
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
