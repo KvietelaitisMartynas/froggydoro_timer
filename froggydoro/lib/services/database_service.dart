@@ -15,6 +15,25 @@ class DatabaseService {
   final String _timersColumnCount = 'count';
   final String _timersColumnIsPicked = 'is_picked';
 
+  final String _calendarEntriesTableName = 'calendar_entries';
+  final String _calendarEntriesColumnId = 'entry_id';
+  final String _calendarEntriesDate = 'date';
+  final String _calendarEntriesDuration = 'duration';
+  final String _calendarEntriesType = 'type';
+  final String _calendarEntriesStatus = 'status';
+
+  final String _achievementsTableName = 'achievements';
+  final String _achievementsColumnId = 'achievement_id';
+  final String _achievementsName = 'name';
+  final String _achievementsDescription = 'description';
+  final String _achievementsIconPath = 'path_to_icon';
+  final String _achievementsCriteriaKey = "criteria_key";
+  final String _achievementsCriteriaValue = "criteria_value";
+
+  final String _userAchievementsTableName = 'user_achievements';
+  final String _userAchievementsColumnId = 'user_achievement_id';
+  final String _userAchievementsUnlockDate = 'unlocked_date';
+
   DatabaseService._constructor();
 
   Future<Database> get database async {
@@ -33,7 +52,7 @@ class DatabaseService {
 
     final database = await openDatabase(
       path,
-      version: 3, // Increment the version
+      version: 5, // Increment the version
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE $_timersTableName (
@@ -45,13 +64,58 @@ class DatabaseService {
             $_timersColumnIsPicked INTEGER DEFAULT 0
           )
         ''');
+
+        await db.execute('''
+          CREATE TABLE $_calendarEntriesTableName (
+            $_calendarEntriesColumnId INTEGER PRIMARY KEY AUTOINCREMENT,
+            $_calendarEntriesDate TEXT NOT NULL,
+            $_calendarEntriesDuration INTEGER NOT NULL,
+            $_calendarEntriesType TEXT NOT NULL,
+            $_calendarEntriesStatus TEXT NOT NULL
+          )
+        ''');
+
+        await db.execute('''
+          CREATE TABLE $_achievementsTableName (
+            $_achievementsColumnId INTEGER PRIMARY KEY AUTOINCREMENT,
+            $_achievementsName TEXT NOT NULL,
+            $_achievementsDescription TEXT NOT NULL,
+            $_achievementsIconPath TEXT,
+            $_achievementsCriteriaKey TEXT NOT NULL,
+            $_achievementsCriteriaValue INTEGER NOT NULL
+          );
+        ''');
+
+        await db.execute('''
+          CREATE TABLE $_userAchievementsTableName (
+            $_userAchievementsColumnId INTEGER PRIMARY KEY AUTOINCREMENT,
+            $_achievementsColumnId INTEGER NOT NULL,
+            $_userAchievementsUnlockDate TEXT NOT NULL,
+            FOREIGN KEY ($_achievementsColumnId) REFERENCES $_achievementsTableName($_achievementsColumnId)
+          );
+        ''');
       },
       onUpgrade: (db, oldVersion, newVersion) async {
-        if (oldVersion < 3) {
-          // Add the is_picked column if it doesn't exist
-          await db.execute(
-            'ALTER TABLE $_timersTableName ADD COLUMN $_timersColumnIsPicked INTEGER DEFAULT 0',
+        if (oldVersion < 5) {
+          await db.execute('''
+          CREATE TABLE $_achievementsTableName (
+            $_achievementsColumnId INTEGER PRIMARY KEY AUTOINCREMENT,
+            $_achievementsName TEXT NOT NULL,
+            $_achievementsDescription TEXT NOT NULL,
+            $_achievementsIconPath TEXT,
+            $_achievementsCriteriaKey TEXT NOT NULL,
+            $_achievementsCriteriaValue INTEGER NOT NULL
           );
+        ''');
+
+          await db.execute('''
+            CREATE TABLE $_userAchievementsTableName (
+              $_userAchievementsColumnId INTEGER PRIMARY KEY AUTOINCREMENT,
+              $_achievementsColumnId INTEGER NOT NULL,
+              $_userAchievementsUnlockDate TEXT NOT NULL,
+              FOREIGN KEY ($_achievementsColumnId) REFERENCES $_achievementsTableName($_achievementsColumnId)
+            );
+          ''');
         }
       },
     );
@@ -140,7 +204,7 @@ class DatabaseService {
     );
   }
 
-  void deleteTimer(int id) async {
+  Future<void> deleteTimer(int id) async {
     final db = await database;
     await db.delete(
       _timersTableName,
@@ -161,5 +225,48 @@ class DatabaseService {
       where: '$_timersColumnId = ?',
       whereArgs: [id],
     );
+  }
+
+  // Achievement methods
+  Future<List<Map<String, dynamic>>> getAllAchievements() async {
+    final db = await database;
+    return await db.query(_achievementsTableName);
+  }
+
+  Future<List<Map<String, dynamic>>> getUnlockedAchievements() async {
+    final db = await database;
+    return await db.rawQuery('''
+    SELECT a.*, ua.$_userAchievementsUnlockDate 
+    FROM $_achievementsTableName a
+    JOIN $_userAchievementsTableName ua
+    ON a.$_achievementsColumnId = ua.$_achievementsColumnId
+  ''');
+  }
+
+  Future<void> unlockAchievement(int achievementId) async {
+    final db = await database;
+
+    final existing = await db.query(
+      _userAchievementsTableName,
+      where: '$_achievementsColumnId = ?',
+      whereArgs: [achievementId],
+    );
+
+    if (existing.isEmpty) {
+      await db.insert(_userAchievementsTableName, {
+        _achievementsColumnId: achievementId,
+        _userAchievementsUnlockDate: DateTime.now().toIso8601String(),
+      });
+    }
+  }
+
+  Future<bool> isAchievementUnlocked(int achievementId) async {
+    final db = await database;
+    final result = await db.query(
+      _userAchievementsTableName,
+      where: '$_achievementsColumnId = ?',
+      whereArgs: [achievementId],
+    );
+    return result.isNotEmpty;
   }
 }
