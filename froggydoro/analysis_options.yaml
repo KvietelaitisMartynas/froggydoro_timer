@@ -29,3 +29,5 @@ linter:
 analyzer:
   plugins:
     - custom_lint
+  errors:
+    avoid_print: ignore
