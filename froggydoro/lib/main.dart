@@ -15,7 +15,7 @@ void main() async {
   // Initialize timezone data
   tz.initializeTimeZones();
 
-  final DatabaseService _databaseService = DatabaseService.instance;
+  final DatabaseService databaseService = DatabaseService.instance;
 
   // Initialize notifications
   final notifications = Notifications();
@@ -26,7 +26,7 @@ void main() async {
 
   if (!wasActive) {
     // Check if a timer is picked in the database
-    final pickedTimer = await _databaseService.getPickedTimer();
+    final pickedTimer = await databaseService.getPickedTimer();
 
     if (pickedTimer != null) {
       // Use the picked timer's settings
