@@ -636,6 +636,7 @@ class _MainScreenState extends State<MainScreen>
     if (!_hasStarted && !_isRunning) roundsText = "Configure in Settings";
 
     return Scaffold(
+      extendBody: true,
       appBar: AppBar(
         centerTitle: true,
         title: const Text(
@@ -747,8 +748,10 @@ class _MainScreenState extends State<MainScreen>
         child: BottomNavigationBar(
           currentIndex: _selectedIndex,
           selectedFontSize: 0,
+          unselectedFontSize: 0,
           elevation: 0,
-          iconSize: screenWidth * 0.08,
+          iconSize: screenWidth * 0.07,
+          type: BottomNavigationBarType.fixed,
           onTap: _onItemTapped,
           items: const [
             BottomNavigationBarItem(
@@ -762,6 +765,27 @@ class _MainScreenState extends State<MainScreen>
           ],
         ),
       ),
+      /* bottomNavigationBar: SafeArea(
+        top: false, // Don't add padding for top safe area
+        left: false,
+        right: false,
+        child: Row(
+          // Your existing Row of IconButtons
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            IconButton(
+              icon: const ImageIcon(AssetImage('assets/clock.png')),
+              iconSize: 24,
+              onPressed: () => _onItemTapped(0),
+            ),
+            IconButton(
+              icon: const ImageIcon(AssetImage('assets/Sliders.png')),
+              iconSize: 24,
+              onPressed: () => _onItemTapped(1),
+            ),
+          ],
+        ),
+      ), */
     );
   }
 
