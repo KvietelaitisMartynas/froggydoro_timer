@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:froggydoro/screens/achievement_screen.dart';
 import 'package:froggydoro/screens/settings_screen.dart';
 import 'package:froggydoro/models/timerObject.dart';
 import 'package:froggydoro/widgets/build_button.dart'; // Assuming ButtonWidget is defined here
@@ -78,7 +79,7 @@ class _MainScreenState extends State<MainScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _initializeAsync(); // Use async initialization
   }
 
@@ -733,6 +734,8 @@ class _MainScreenState extends State<MainScreen>
               ),
             ),
           ),
+          // Achievements View (Placeholder)
+          AchievementsScreen(),
           // Settings View
           SettingsScreen(
             updateTimer: _updateSettings,
@@ -757,6 +760,10 @@ class _MainScreenState extends State<MainScreen>
             BottomNavigationBarItem(
               icon: ImageIcon(AssetImage('assets/clock.png')),
               label: "",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.star),
+              label: "Achievements",
             ),
             BottomNavigationBarItem(
               icon: ImageIcon(AssetImage('assets/Sliders.png')),

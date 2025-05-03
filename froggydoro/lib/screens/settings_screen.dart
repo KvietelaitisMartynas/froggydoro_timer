@@ -176,8 +176,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.all(16.0),
         children: [
           const Text(
-            'General',
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            'General settings',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 10),
           buildChangeThemeSetting(),
@@ -205,11 +208,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Theme Settings',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 10),
         SettingsTile(
           title: 'Theme Mode',
           subtitle: selectedTheme,
@@ -247,11 +245,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Time Settings',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 10),
         SettingsTile(
           title: 'Session',
           subtitle:
@@ -289,10 +282,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Always on display',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
         const SizedBox(height: 10),
         Container(
           decoration: BoxDecoration(
@@ -300,7 +289,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             borderRadius: BorderRadius.circular(10),
           ),
           child: SwitchListTile(
-            title: const Text('Enable'),
+            title: const Text('Always on display'),
             value: _isWakeLockEnabled,
             onChanged: (bool value) {
               setState(() {
@@ -342,11 +331,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Ambience Settings',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 10),
         SettingsTile(
           title: 'Ambient Sounds',
           subtitle: selectedAmbience,
