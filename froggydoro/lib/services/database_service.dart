@@ -1,4 +1,5 @@
 import 'package:froggydoro/models/timerObject.dart';
+import 'package:froggydoro/models/calendarEntryObject.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -268,5 +269,72 @@ class DatabaseService {
       whereArgs: [achievementId],
     );
     return result.isNotEmpty;
+  }
+
+  /// CALENDAR LOGIC
+
+  Future<void> addCalendarEntry(
+    String date,
+    int duration,
+    String type,
+    String status,
+  ) async {
+    final db = await database;
+    await db.insert(_calendarEntriesTableName, {
+      _calendarEntriesDate: date,
+      _calendarEntriesDuration: duration,
+      _calendarEntriesType: type,
+      _calendarEntriesStatus: status,
+    });
+  }
+
+  Future<List<CalendarEntryObject>> getCalendarEntries() async {
+    final db = await database;
+    final data = await db.query(_calendarEntriesTableName);
+
+    List<CalendarEntryObject> calendarEntries =
+        data
+            .map(
+              (e) => CalendarEntryObject(
+                id: e[_calendarEntriesColumnId] as int,
+                date: DateTime.parse(e[_calendarEntriesDate] as String),
+                duration: e[_calendarEntriesDuration] as int,
+                type: e[_calendarEntriesType] as String,
+                status: e[_calendarEntriesStatus] as String,
+              ),
+            )
+            .toList();
+
+    return calendarEntries;
+  }
+
+  Future<void> deleteCalendarEntry(int id) async {
+    final db = await database;
+    await db.delete(
+      _calendarEntriesTableName,
+      where: '$_calendarEntriesColumnId = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<void> updateCalendarEntry(
+    int id,
+    String date,
+    int duration,
+    String type,
+    String status,
+  ) async {
+    final db = await database;
+    await db.update(
+      _calendarEntriesTableName,
+      {
+        _calendarEntriesDate: date,
+        _calendarEntriesDuration: duration,
+        _calendarEntriesType: type,
+        _calendarEntriesStatus: status,
+      },
+      where: '$_calendarEntriesColumnId = ?',
+      whereArgs: [id],
+    );
   }
 }

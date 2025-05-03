@@ -92,12 +92,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     setState(() {
       _themeMode = _getThemeModeFromString(themeModeString);
-      selectedTheme = themeOptions.entries
-          .firstWhere(
-            (entry) => entry.value['value'] == themeModeString,
-            orElse: () => themeOptions.entries.last,
-          )
-          .key;
+      selectedTheme =
+          themeOptions.entries
+              .firstWhere(
+                (entry) => entry.value['value'] == themeModeString,
+                orElse: () => themeOptions.entries.last,
+              )
+              .key;
     });
   }
 
@@ -214,21 +215,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
           onTap: () {
             _showBottomSheet(
               context: context,
-              children: themeOptions.entries.map((entry) {
-                return ListTile(
-                  leading: Icon(entry.value['icon']),
-                  title: Text(entry.key),
-                  onTap: () async {
-                    setState(() {
-                      selectedTheme = entry.key;
-                      _themeMode = _getThemeModeFromString(entry.value['value']);
-                    });
-                    await _saveThemeMode(_themeMode);
-                    widget.onThemeModeChanged(_themeMode);
-                    Navigator.pop(context);
-                  },
-                );
-              }).toList(),
+              children:
+                  themeOptions.entries.map((entry) {
+                    return ListTile(
+                      leading: Icon(entry.value['icon']),
+                      title: Text(entry.key),
+                      onTap: () async {
+                        setState(() {
+                          selectedTheme = entry.key;
+                          _themeMode = _getThemeModeFromString(
+                            entry.value['value'],
+                          );
+                        });
+                        await _saveThemeMode(_themeMode);
+                        widget.onThemeModeChanged(_themeMode);
+                        Navigator.pop(context);
+                      },
+                    );
+                  }).toList(),
             );
           },
         ),
@@ -243,25 +247,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
       children: [
         SettingsTile(
           title: 'Session',
-          subtitle: _selectedPreset != null
-              ? "Preset: ${_selectedPreset!.name}"
-              : "No preset selected",
+          subtitle:
+              _selectedPreset != null
+                  ? "Preset: ${_selectedPreset!.name}"
+                  : "No preset selected",
           trailingIcon: Icons.arrow_forward,
           onTap: () async {
             await Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => SessionSelectionScreen(
-                  onSessionChanged: (workDuration, breakDuration, count) {
-                    widget.updateTimer(
-                      workDuration,
-                      0,
-                      breakDuration,
-                      0,
-                      count,
-                    );
-                  },
-                ),
+                builder:
+                    (context) => SessionSelectionScreen(
+                      onSessionChanged: (workDuration, breakDuration, count) {
+                        widget.updateTimer(
+                          workDuration,
+                          0,
+                          breakDuration,
+                          0,
+                          count,
+                        );
+                      },
+                    ),
               ),
             );
             await _loadSelectedPreset();
@@ -297,7 +303,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  static const List<String> ambienceOptions = ["None", "Bonfire", "Chirping", "Rain", "River"];
+  static const List<String> ambienceOptions = [
+    "None",
+    "Bonfire",
+    "Chirping",
+    "Rain",
+    "River",
+  ];
 
   /// Saves the selected ambient sound setting to shared preferences.
   Future<void> _saveAmbience(String ambience) async {
@@ -326,18 +338,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
           onTap: () {
             _showBottomSheet(
               context: context,
-              children: ambienceOptions.map((String value) {
-                return ListTile(
-                  title: Text(value),
-                  onTap: () async {
-                    setState(() {
-                      selectedAmbience = value;
-                    });
-                    await _saveAmbience(value);
-                    Navigator.pop(context);
-                  },
-                );
-              }).toList(),
+              children:
+                  ambienceOptions.map((String value) {
+                    return ListTile(
+                      title: Text(value),
+                      onTap: () async {
+                        setState(() {
+                          selectedAmbience = value;
+                        });
+                        await _saveAmbience(value);
+                        Navigator.pop(context);
+                      },
+                    );
+                  }).toList(),
             );
           },
         ),
@@ -355,10 +368,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (BuildContext context) {
         return Container(
           padding: const EdgeInsets.all(10),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: children,
-          ),
+          child: Column(mainAxisSize: MainAxisSize.min, children: children),
         );
       },
     );
