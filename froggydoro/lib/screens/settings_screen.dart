@@ -208,6 +208,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const Text(
+          'Theme Settings',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
         SettingsTile(
           title: 'Theme Mode',
           subtitle: selectedTheme,
@@ -245,6 +249,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const Text(
+          'Timer Settings',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
         SettingsTile(
           title: 'Session',
           subtitle:
@@ -282,14 +290,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 10),
+        const Text(
+          'Always on display',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
         Container(
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.secondaryContainer,
             borderRadius: BorderRadius.circular(10),
           ),
           child: SwitchListTile(
-            title: const Text('Always on display'),
+            title: const Text('Enable'),
             value: _isWakeLockEnabled,
             onChanged: (bool value) {
               setState(() {
@@ -331,6 +342,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const Text(
+          'Ambience Settings',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
         SettingsTile(
           title: 'Ambient Sounds',
           subtitle: selectedAmbience,
