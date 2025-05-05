@@ -1,7 +1,10 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
-import '../services/database_service.dart';
-import '../models/timerObject.dart';
-import '../screens/time_settings_screen.dart';
+
+import 'package:froggydoro/models/timerObject.dart';
+import 'package:froggydoro/screens/time_settings_screen.dart';
+import 'package:froggydoro/services/database_service.dart';
 
 class SessionSelectionScreen extends StatefulWidget {
   final void Function(int workDuration, int breakDuration, int count)
@@ -17,12 +20,14 @@ class _SessionSelectionScreenState extends State<SessionSelectionScreen> {
   List<TimerObject> _presets = [];
   final DatabaseService _databaseService = DatabaseService.instance;
 
+  /// Method to initialize the state
   @override
   void initState() {
     super.initState();
     _loadPresets();
   }
 
+  /// Method to load all presets from the database and update the state
   Future<void> _loadPresets() async {
     final allPresets = await _databaseService.getTimers();
     setState(() {
@@ -30,6 +35,7 @@ class _SessionSelectionScreenState extends State<SessionSelectionScreen> {
     });
   }
 
+  /// Method to select a preset and update the session
   Future<void> _selectPreset(TimerObject preset) async {
     await _databaseService.setPickedTimer(preset.id);
 
@@ -38,9 +44,13 @@ class _SessionSelectionScreenState extends State<SessionSelectionScreen> {
       preset.breakDuration,
       preset.count,
     );
+
+    if (!mounted) return;
+
     Navigator.pop(context);
   }
 
+  /// Method to edit a preset and navigate to the TimeSettingsScreen
   Future<void> _editPreset(TimerObject preset) async {
     Navigator.push(
       context,
@@ -67,6 +77,7 @@ class _SessionSelectionScreenState extends State<SessionSelectionScreen> {
     );
   }
 
+  /// Method that adds a new preset and navigates to the TimeSettingsScreen
   void _addNewPreset() {
     Navigator.push(
       context,
@@ -105,7 +116,7 @@ class _SessionSelectionScreenState extends State<SessionSelectionScreen> {
                         _loadPresets();
                       })
                       .catchError((e) {
-                        print("Error inserting preset: $e");
+                        log("Error inserting preset: $e");
                       });
                 });
               },
@@ -114,6 +125,7 @@ class _SessionSelectionScreenState extends State<SessionSelectionScreen> {
     );
   }
 
+  /// Method to show a confirmation dialog before deleting a preset
   Future<void> _showResetConfirmationDialog(
     BuildContext context,
     TimerObject preset,

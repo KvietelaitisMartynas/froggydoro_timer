@@ -19,7 +19,7 @@ void main() async {
 
   // Initialize notifications
   final notifications = Notifications();
-  await notifications.init();
+  await notifications.initNotifications();
 
   final prefs = await SharedPreferences.getInstance();
   final wasActive = prefs.getBool('wasActive') ?? false;
