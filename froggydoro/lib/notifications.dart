@@ -1,4 +1,6 @@
+import 'dart:developer';
 import 'dart:io';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -7,11 +9,28 @@ import 'package:timezone/timezone.dart' as tz;
 class Notifications {
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
 
+  NotificationDetails _notificationDetails() => const NotificationDetails(
+    android: AndroidNotificationDetails(
+      'froggydoro_channel',
+      'Froggydoro Notifications',
+      channelDescription: 'Froggydoro alerts for work/break sessions',
+      importance: Importance.max,
+      priority: Priority.high,
+      icon: '@drawable/frog_notif_icon',
+    ),
+    iOS: DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    ),
+  );
+
   Notifications({FlutterLocalNotificationsPlugin? plugin})
     : flutterLocalNotificationsPlugin =
           plugin ?? FlutterLocalNotificationsPlugin();
 
-  Future<void> init() async {
+  // Method that initializes the notifications class.
+  Future<void> initNotifications() async {
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
@@ -47,6 +66,7 @@ class Notifications {
     await _requestPermissions();
   }
 
+  // Method that requests permissions from the user to allow the app to send notifications.
   Future<void> _requestPermissions() async {
     if (Platform.isIOS) {
       // Request permissions for iOS
@@ -57,16 +77,7 @@ class Notifications {
           ?.requestPermissions(alert: true, badge: true, sound: true);
     } else if (Platform.isAndroid) {
       // Request permissions for Android (Android 13+ requires POST_NOTIFICATIONS permission)
-      if (await Permission.notification.isDenied) {
-        final status = await Permission.notification.request();
-        if (status.isGranted) {
-          print('Notification permission granted on Android.');
-        } else {
-          print('Notification permission denied on Android.');
-        }
-      } else {
-        print('Notification permission already granted on Android.');
-      }
+      await Permission.notification.request();
     }
   }
 
@@ -80,25 +91,10 @@ class Notifications {
         id,
         title,
         body,
-        const NotificationDetails(
-          android: AndroidNotificationDetails(
-            'froggydoro_channel',
-            'Froggydoro Notifications',
-            channelDescription: 'Froggydoro alerts for work/break sessions',
-            importance: Importance.max,
-            priority: Priority.high,
-            icon: '@drawable/frog_notif_icon',
-          ),
-          iOS: DarwinNotificationDetails(
-            presentAlert: true,
-            presentBadge: true,
-            presentSound: true,
-          ),
-        ),
+        _notificationDetails(),
       );
-      print('Notification displayed successfully.');
     } catch (e) {
-      print('Error displaying notification: $e');
+      log('Error displaying notification: $e');
     }
   }
 
@@ -110,7 +106,6 @@ class Notifications {
   }) async {
     if (Platform.isAndroid) {
       // Skip scheduling notifications on Android
-      print('Skipping scheduled notification on Android.');
       return;
     }
 
@@ -126,37 +121,22 @@ class Notifications {
         title,
         body,
         tzScheduledTime,
-        const NotificationDetails(
-          android: AndroidNotificationDetails(
-            'froggydoro_channel',
-            'Froggydoro Notifications',
-            channelDescription: 'Froggydoro alerts for work/break sessions',
-            importance: Importance.max,
-            priority: Priority.high,
-          ),
-          iOS: DarwinNotificationDetails(
-            presentAlert: true,
-            presentBadge: true,
-            presentSound: true,
-          ),
-        ),
+        _notificationDetails(),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
         payload: 'Notification Payload',
       );
-      print('Scheduled notification successfully on iOS.');
     } catch (e) {
-      print('Error scheduling notification: $e');
+      log('Error scheduling notification: $e');
     }
   }
 
   Future<void> cancelNotification(int id) async {
     try {
       await flutterLocalNotificationsPlugin.cancel(id);
-      print('Notification with ID $id canceled successfully.');
     } catch (e) {
-      print('Error canceling notification: $e');
+      log('Error canceling notification: $e');
     }
   }
 }
