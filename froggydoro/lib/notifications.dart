@@ -9,6 +9,7 @@ import 'package:timezone/timezone.dart' as tz;
 class Notifications {
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
 
+  /// Method that returns the notification details for Android and iOS.
   NotificationDetails _notificationDetails() => const NotificationDetails(
     android: AndroidNotificationDetails(
       'froggydoro_channel',
@@ -29,7 +30,7 @@ class Notifications {
     : flutterLocalNotificationsPlugin =
           plugin ?? FlutterLocalNotificationsPlugin();
 
-  // Method that initializes the notifications class.
+  /// Method that initializes the notifications class.
   Future<void> initNotifications() async {
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -81,6 +82,7 @@ class Notifications {
     }
   }
 
+  /// Method that shows a notification with the given id, title, and body.
   Future<void> showNotification({
     required int id,
     required String title,
@@ -98,6 +100,7 @@ class Notifications {
     }
   }
 
+  /// Method that schedules a notification for iOS at the specified time.
   Future<void> scheduleNotification({
     required int id,
     required String title,
@@ -132,6 +135,7 @@ class Notifications {
     }
   }
 
+  /// Method that cancels a notification with the given id.
   Future<void> cancelNotification(int id) async {
     try {
       await flutterLocalNotificationsPlugin.cancel(id);
