@@ -1,7 +1,10 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
-import '../services/database_service.dart';
-import '../models/timerObject.dart';
-import '../screens/time_settings_screen.dart';
+
+import 'package:froggydoro/models/timerObject.dart';
+import 'package:froggydoro/screens/time_settings_screen.dart';
+import 'package:froggydoro/services/database_service.dart';
 
 class SessionSelectionScreen extends StatefulWidget {
   final void Function(int workDuration, int breakDuration, int count)
@@ -38,6 +41,9 @@ class _SessionSelectionScreenState extends State<SessionSelectionScreen> {
       preset.breakDuration,
       preset.count,
     );
+
+    if (!mounted) return;
+
     Navigator.pop(context);
   }
 
@@ -105,7 +111,7 @@ class _SessionSelectionScreenState extends State<SessionSelectionScreen> {
                         _loadPresets();
                       })
                       .catchError((e) {
-                        print("Error inserting preset: $e");
+                        log("Error inserting preset: $e");
                       });
                 });
               },
