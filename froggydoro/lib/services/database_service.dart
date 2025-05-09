@@ -53,7 +53,7 @@ class DatabaseService {
 
     final database = await openDatabase(
       path,
-      version: 5, // Increment the version
+      version: 7, // Increment the version
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE $_timersTableName (
@@ -96,6 +96,8 @@ class DatabaseService {
           );
         ''');
       },
+
+      
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 5) {
           await db.execute('''
@@ -118,6 +120,23 @@ class DatabaseService {
             );
           ''');
         }
+
+        if (oldVersion < 6) {
+          // Check if calendar table exists and create it only if necessary.
+          var result = await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='$_calendarEntriesTableName'");
+          if (result.isEmpty) {
+            await db.execute('''
+              CREATE TABLE $_calendarEntriesTableName (
+                $_calendarEntriesColumnId INTEGER PRIMARY KEY AUTOINCREMENT,
+                $_calendarEntriesDate TEXT NOT NULL,
+                $_calendarEntriesDuration INTEGER NOT NULL,
+                $_calendarEntriesType TEXT NOT NULL,
+                $_calendarEntriesStatus TEXT NOT NULL
+              )
+            ''');
+          }
+        }
+
       },
     );
 
@@ -337,4 +356,40 @@ class DatabaseService {
       whereArgs: [id],
     );
   }
+
+  //Get the entries for calander, by the given date
+  Future<List<CalendarEntryObject>> getWorkEntriesForDate(String dateString) async {
+    final db = await database;
+
+    final data = await db.query(
+      _calendarEntriesTableName,
+      where: '$_calendarEntriesDate = ? AND ($_calendarEntriesStatus = ? OR $_calendarEntriesStatus = ?)',
+      whereArgs: [dateString, 'work', 'completed'],
+    );
+
+    return data.map((e) => CalendarEntryObject(
+      id: e[_calendarEntriesColumnId] as int,
+      date: DateTime.parse(e[_calendarEntriesDate] as String),
+      duration: e[_calendarEntriesDuration] as int,
+      type: e[_calendarEntriesType] as String,
+      status: e[_calendarEntriesStatus] as String,
+    )).toList();
+}
+
+// Future<void> checkDatabase() async {
+//   final db = await database;
+  
+//   // Query to count entries
+//   final result = await db.rawQuery('SELECT COUNT(*) FROM $_calendarEntriesTableName');
+  
+//   // Access the result correctly
+//   final count = result.first['COUNT(*)'];  // Get the count of entries
+  
+//   print('Number of entries in database: $count');
+  
+//   // Fetch all entries for inspection
+//   final allEntries = await db.query(_calendarEntriesTableName);
+//   print('All entries in the database: $allEntries');
+// }
+
 }
