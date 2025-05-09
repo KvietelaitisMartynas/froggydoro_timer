@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:froggydoro/services/database_service.dart';
 import 'package:froggydoro/services/preferences_service.dart';
+import 'package:froggydoro/widgets/dialog_helper.dart';
 
 class SettingsScreen extends StatefulWidget {
   final Function(int, int, int, int, int) updateTimer;
@@ -404,16 +405,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-                foregroundColor: Theme.of(context).colorScheme.onSecondaryContainer,
+                backgroundColor:
+                    Theme.of(context).colorScheme.secondaryContainer,
+                foregroundColor:
+                    Theme.of(context).colorScheme.onSecondaryContainer,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
               onPressed: () {
                 // TODO: Implement reset all progress functionality
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('All progress reset')),
+                TimerDialogsHelper.showResetProgressConfirmationDialog(
+                  context: context,
+                  onConfirmed: () async {
+                    //await DatabaseService.instance.clearUserProgress();
+                  },
                 );
               },
               child: const Row(
