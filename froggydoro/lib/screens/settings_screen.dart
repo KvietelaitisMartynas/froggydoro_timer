@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:froggydoro/services/database_service.dart';
 import 'package:froggydoro/services/preferences_service.dart';
+import 'package:froggydoro/widgets/dialog_helper.dart';
 
 class SettingsScreen extends StatefulWidget {
   final Function(int, int, int, int, int) updateTimer;
@@ -177,10 +178,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           const Text(
             'General settings',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
           buildChangeThemeSetting(),
@@ -190,6 +188,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           buildChangeTimeSetting(),
           const SizedBox(height: 20),
           buildChangeAmbienceSetting(),
+          const SizedBox(height: 10),
+          buildResetButton(context),
         ],
       ),
     );
@@ -386,6 +386,62 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: Column(mainAxisSize: MainAxisSize.min, children: children),
         );
       },
+    );
+  }
+
+  // Displays Reset All Progress button
+  Widget buildResetButton(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Progress',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                backgroundColor:
+                    Theme.of(context).colorScheme.secondaryContainer,
+                foregroundColor:
+                    Theme.of(context).colorScheme.onSecondaryContainer,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              onPressed: () {
+                // TODO: Implement reset all progress functionality
+                TimerDialogsHelper.showResetProgressConfirmationDialog(
+                  context: context,
+                  onConfirmed: () async {
+                    //await DatabaseService.instance.clearUserProgress();
+                  },
+                );
+              },
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      'Reset All Progress',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
