@@ -337,4 +337,30 @@ class DatabaseService {
       whereArgs: [id],
     );
   }
+
+  // Deletes user data from the database
+  Future<void> clearUserProgress(int userId) async {
+    final db = await database;
+
+    // Delete timers associated with the user
+    await db.delete(
+      _timersTableName,
+      where: '$_timersColumnUserId = ?',
+      whereArgs: [userId],
+    );
+
+    // Delete user-specific achievements
+    await db.delete(
+      _userAchievementsTableName,
+      where: '$_timersColumnUserId = ?',
+      whereArgs: [userId],
+    );
+
+    // Add Calendar entries deletion if needed
+    await db.delete(
+      _calendarEntriesTableName,
+      where: '$_timersColumnUserId = ?',
+      whereArgs: [userId],
+    );
+  }
 }
