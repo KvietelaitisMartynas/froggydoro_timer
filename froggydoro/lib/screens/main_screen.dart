@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:froggydoro/screens/achievement_screen.dart';
+import 'package:froggydoro/screens/calendar_screen.dart';
 import 'package:froggydoro/screens/settings_screen.dart';
 import 'package:froggydoro/models/timerObject.dart';
 import 'package:froggydoro/widgets/build_button.dart'; // Assuming ButtonWidget is defined here
@@ -383,6 +384,15 @@ class _MainScreenState extends State<MainScreen>
     if (wasBreak) {
       // ---- Break Finished ----
       _sessionCount++; // Increment session after break
+
+      final String dateOnly = DateTime.now().toIso8601String().split('T')[0]; // saves only the date, no time values 00:00
+      _databaseService.addCalendarEntry(
+        dateOnly,
+        _breakMinutes,  // or _workMinutes + _workSeconds / 60 if seconds matter
+        'break',        // type can be 'work' or whatever fits your logic
+        'completed',   // or another status you track
+      );
+
       setState(() {
         _isBreakTime = false;
         _totalSeconds = _workMinutes * 60 + _workSeconds;
@@ -404,6 +414,15 @@ class _MainScreenState extends State<MainScreen>
     } else {
       // ---- Work Finished ----
       bool isLastRound = _currentRound >= _roundCountSetting;
+
+        // Save the completed work session before switching to break
+      final String dateOnly = DateTime.now().toIso8601String().split('T')[0];  // saves only the date, no time values 00:00
+      _databaseService.addCalendarEntry(
+        dateOnly,
+        _workMinutes,  // the duration of the completed work session
+        'work',        // session type for work
+        'completed',   // session status
+      );
 
       if (isLastRound) {
         // ---- All Rounds Completed ----
@@ -735,7 +754,8 @@ class _MainScreenState extends State<MainScreen>
             ),
           ),
           // Achievements View (Placeholder)
-          AchievementsScreen(),
+          //AchievementsScreen(),
+          CalendarScreen(),
           // Settings View
           SettingsScreen(
             updateTimer: _updateSettings,
