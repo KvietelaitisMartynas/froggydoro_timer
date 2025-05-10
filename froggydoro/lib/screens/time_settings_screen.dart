@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
 import '../models/timerObject.dart';
 import '../services/database_service.dart';
 import '../widgets/time_step.dart';
+import 'package:flutter/material.dart';
+
 
 class TimeSettingsScreen extends StatefulWidget {
   final TimerObject preset;

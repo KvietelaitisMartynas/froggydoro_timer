@@ -2,16 +2,15 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:froggydoro/screens/achievement_screen.dart';
+import 'package:froggydoro/models/timerObject.dart';
+import 'package:froggydoro/notifications.dart';
 import 'package:froggydoro/screens/calendar_screen.dart';
 import 'package:froggydoro/screens/settings_screen.dart';
-import 'package:froggydoro/models/timerObject.dart';
-import 'package:froggydoro/widgets/build_button.dart'; // Assuming ButtonWidget is defined here
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:froggydoro/widgets/music_Manager.dart';
-import 'package:froggydoro/notifications.dart';
 import 'package:froggydoro/services/database_service.dart';
+import 'package:froggydoro/widgets/build_button.dart';
 import 'package:froggydoro/widgets/dialog_helper.dart';
+import 'package:froggydoro/widgets/music_Manager.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MainScreen extends StatefulWidget {
   final ValueChanged<ThemeMode> onThemeModeChanged;
@@ -93,14 +92,10 @@ class _MainScreenState extends State<MainScreen>
     }
   }
 
-  void test() {
-    var x = 10; // should suggest final
-  }
-
   // Load settings from DB/Prefs and restore timer state
   Future<void> _loadSettingsAndState() async {
     final prefs = await SharedPreferences.getInstance();
-    print("DEBUG: Loading state..."); // Add logging
+    //print("DEBUG: Loading state..."); // Add logging
 
     // 1. Load Timer Settings (Same as before)
     _timerObject = await _databaseService.getPickedTimer();
@@ -135,9 +130,9 @@ class _MainScreenState extends State<MainScreen>
       prefRemainingTime,
     ); // We might not even need this anymore
 
-    print(
-      "DEBUG: Loaded Prefs - savedIsRunning: $savedIsRunning, startTime: $startTimeString, isBreak: $_isBreakTime, hasStarted: $_hasStarted",
-    );
+    //print(
+    //  "DEBUG: Loaded Prefs - savedIsRunning: $savedIsRunning, startTime: $startTimeString, isBreak: $_isBreakTime, hasStarted: $_hasStarted",
+    //);
 
     int newTotalSeconds;
     bool newIsRunning = savedIsRunning; // Assume saved running state initially
@@ -195,13 +190,13 @@ class _MainScreenState extends State<MainScreen>
         });
       } else if (_isRunning) {
         // If the timer should still be running, restart the periodic timer
-        print("DEBUG: Timer should be running, starting periodic timer.");
+        //print("DEBUG: Timer should be running, starting periodic timer.");
         _startPeriodicTimer();
       } else {
-        print("DEBUG: Timer is not running, no periodic timer started.");
+        //print("DEBUG: Timer is not running, no periodic timer started.");
       }
     } else {
-      print("DEBUG: State not set because widget is not mounted.");
+      //print("DEBUG: State not set because widget is not mounted.");
       // If not mounted, just update the instance variables directly
       // This might happen if load finishes after dispose but before async gap completes
       _totalSeconds = newTotalSeconds;
@@ -278,7 +273,7 @@ class _MainScreenState extends State<MainScreen>
     if (Platform.isIOS) {
       for (int id in _scheduledNotifications) {
         widget.notifications.cancelNotification(id).catchError((e) {
-          print("Error cancelling notification $id: $e");
+          //print("Error cancelling notification $id: $e");
         });
       }
       _scheduledNotifications.clear();
@@ -331,7 +326,7 @@ class _MainScreenState extends State<MainScreen>
 
         _scheduledNotifications.add(1);
       } catch (e) {
-        print('Error scheduling iOS notification: $e');
+        //print('Error scheduling iOS notification: $e');
       }
     }
 
@@ -375,7 +370,7 @@ class _MainScreenState extends State<MainScreen>
           );
         }
       } catch (e) {
-        print('Error showing immediate Android notification: $e');
+        //print('Error showing immediate Android notification: $e');
       }
     }
 
