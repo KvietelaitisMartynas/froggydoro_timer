@@ -414,11 +414,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               onPressed: () {
-                // TODO: Implement reset all progress functionality
                 TimerDialogsHelper.showResetProgressConfirmationDialog(
                   context: context,
                   onConfirmed: () async {
-                    //await DatabaseService.instance.clearUserProgress();
+                    await DatabaseService.instance.clearUserProgress();
+                    
+                    setState(() {
+                      _selectedPreset = null;
+                    });
+
+                    widget.updateTimer(25, 0, 5, 0, 4);
                   },
                 );
               },
