@@ -1,7 +1,7 @@
-import 'package:froggydoro/models/timerObject.dart';
 import 'package:froggydoro/models/calendarEntryObject.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:froggydoro/models/timerObject.dart';
 import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
 
 class DatabaseService {
   static Database? _db;
@@ -123,7 +123,7 @@ class DatabaseService {
 
         if (oldVersion < 6) {
           // Check if calendar table exists and create it only if necessary.
-          var result = await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='$_calendarEntriesTableName'");
+          final result = await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='$_calendarEntriesTableName'");
           if (result.isEmpty) {
             await db.execute('''
               CREATE TABLE $_calendarEntriesTableName (
@@ -164,7 +164,7 @@ class DatabaseService {
   Future<List<TimerObject>> getTimers() async {
     final db = await database;
     final data = await db.query(_timersTableName);
-    print(data);
+    //print(data);
     List<TimerObject> timers =
         data
             .map(
