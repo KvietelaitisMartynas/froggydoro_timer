@@ -36,7 +36,8 @@ class _MainScreenState extends State<MainScreen>
 
   late TabController _tabController;
 
-  int _selectedIndex = 0;
+  // Initialize selected index to 1 (middle tab - timer)
+  int _selectedIndex = 1;
   TimerObject? _timerObject; // Loaded from DB
   // Default values, will be overwritten by DB or SharedPreferences
   int _workMinutes = 25;
@@ -79,7 +80,7 @@ class _MainScreenState extends State<MainScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 3, vsync: this, initialIndex: 1);
     _initializeAsync(); // Use async initialization
   }
 
@@ -351,6 +352,7 @@ class _MainScreenState extends State<MainScreen>
     _startTimeSaved = null;
     _cancelScheduledNotifications();
 
+    // Show notifications based on platform
     if (Platform.isAndroid) {
       try {
         if (_currentRound >= _roundCountSetting) {
@@ -363,10 +365,7 @@ class _MainScreenState extends State<MainScreen>
           widget.notifications.showNotification(
             id: 2,
             title: _isBreakTime ? 'Break Over!' : 'Work Complete!',
-            body:
-                _isBreakTime
-                    ? 'Time to get back to work.'
-                    : 'Ready for a break?',
+            body: _isBreakTime ? 'Time to get back to work.' : 'Ready for a break?',
           );
         }
       } catch (e) {
@@ -375,13 +374,14 @@ class _MainScreenState extends State<MainScreen>
     }
 
     bool wasBreak = _isBreakTime; // Store if the completed timer was a break
+    final DateTime now = DateTime.now(); // Capture completion time
 
     if (wasBreak) {
       // ---- Break Finished ----
       _sessionCount++; // Increment session after break
 
       // Add break session to calendar
-      final String dateOnly = DateTime.now().toIso8601String().split('T')[0];
+      final String dateOnly = now.toIso8601String().split('T')[0];
       await _databaseService.addCalendarEntry(
         dateOnly,
         _breakMinutes,
@@ -410,9 +410,7 @@ class _MainScreenState extends State<MainScreen>
       bool isLastRound = _currentRound >= _roundCountSetting;
 
       // Add work session to calendar
-      final DateTime now = DateTime.now();
       final String dateOnly = now.toIso8601String().split('T')[0];
-
       await _databaseService.addCalendarEntry(
         dateOnly,
         _workMinutes,
@@ -420,18 +418,18 @@ class _MainScreenState extends State<MainScreen>
         'completed',
       );
 
-      // Check for achievements separately
-      await _databaseService.checkAndUnlockAchievements(now);
-
       if (isLastRound) {
         // ---- All Rounds Completed ----
-
         if (!triggeredByLoad && mounted) {
           TimerDialogsHelper.showSessionCompletePopup(
             context: context,
             messageTitle: 'Cycle Complete!',
             messageBody: 'All $_roundCountSetting rounds finished!',
-            onStartPressed: _handleCycleCompleteReset,
+            onStartPressed: () async {
+              _handleCycleCompleteReset();
+              // Check achievements after session end popup is closed
+              await _databaseService.checkAndUnlockAchievements(now);
+            },
             showStart: false,
             showPause: false,
             showReset: true,
@@ -439,21 +437,23 @@ class _MainScreenState extends State<MainScreen>
         }
       } else {
         // ---- Normal Work Round Completed, Move to Next ----
-
         setState(() {
           _isBreakTime = true; // Switch to break mode conceptually
           _totalSeconds = _breakMinutes * 60 + _breakSeconds;
         });
-        int roundCompleted = _currentRound; // Capture before incrementing
-
+        
         _saveTimerState();
 
         if (!triggeredByLoad && mounted) {
           TimerDialogsHelper.showSessionCompletePopup(
             context: context,
             messageTitle: 'Work Complete!',
-            messageBody: 'Start Break for Round $roundCompleted?',
-            onStartPressed: _startTimer,
+            messageBody: 'Start Break for Round $_currentRound?',
+            onStartPressed: () async {
+              _startTimer();
+              // Check achievements after session end popup is closed
+              await _databaseService.checkAndUnlockAchievements(now);
+            },
           );
         }
       }
@@ -674,6 +674,7 @@ class _MainScreenState extends State<MainScreen>
         controller: _tabController,
         physics: const NeverScrollableScrollPhysics(),
         children: [
+          CalendarScreen(),
           // Timer View
           Center(
             child: Padding(
@@ -756,7 +757,6 @@ class _MainScreenState extends State<MainScreen>
           ),
           // Achievements View (Placeholder)
           //AchievementsScreen(),
-          CalendarScreen(),
           // Settings View
           SettingsScreen(
             updateTimer: _updateSettings,
@@ -779,12 +779,12 @@ class _MainScreenState extends State<MainScreen>
           onTap: _onItemTapped,
           items: const [
             BottomNavigationBarItem(
-              icon: ImageIcon(AssetImage('assets/clock.png')),
-              label: "",
+              icon: ImageIcon(AssetImage('assets/Book.png')),
+              label: "Achievements",
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.star),
-              label: "Achievements",
+              icon: ImageIcon(AssetImage('assets/clock.png')),
+              label: "",
             ),
             BottomNavigationBarItem(
               icon: ImageIcon(AssetImage('assets/Sliders.png')),

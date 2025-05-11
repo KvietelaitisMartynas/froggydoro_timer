@@ -1,5 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:froggydoro/models/calendar_entry_object.dart';
 import 'package:froggydoro/models/timer_object.dart';
+import 'package:froggydoro/widgets/dialog_helper.dart';
+import 'package:froggydoro/main.dart';  // Import for navigatorKey
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -33,6 +36,33 @@ class DatabaseService {
   final String _userAchievementsTableName = 'user_achievements';
   final String _userAchievementsColumnId = 'user_achievement_id';
   final String _userAchievementsUnlockDate = 'unlocked_date';
+
+  // Queue to manage achievement popups
+  static final List<Map<String, dynamic>> _achievementQueue = [];
+  static bool _isShowingAchievement = false;
+
+  // Shows the next achievement in the queue
+  static void _showNextAchievement() {
+    if (_achievementQueue.isEmpty || _isShowingAchievement) {
+      return;
+    }
+
+    _isShowingAchievement = true;
+    final achievement = _achievementQueue.removeAt(0);
+
+    if (navigatorKey.currentContext != null) {
+      TimerDialogsHelper.showAchievementDialog(
+        navigatorKey.currentContext!,
+        achievement['name'] as String,
+        achievement['description'] as String,
+        achievement['iconPath'] as String,
+        onClose: () {
+          _isShowingAchievement = false;
+          _showNextAchievement(); // Show next achievement when this one is closed
+        },
+      );
+    }
+  }
 
   DatabaseService._constructor();
 
@@ -294,9 +324,10 @@ class DatabaseService {
     await checkAndUnlockAchievements(completionTime);
   }
 
-  Future<void> checkAndUnlockAchievements(DateTime completionTime) async {
+  Future<bool> checkAndUnlockAchievements(DateTime completionTime) async {
     final db = await database;
     final achievements = await getAllAchievements();
+    bool achievementUnlocked = false;
 
     for (var achievement in achievements) {
       final criteriaKey = achievement[_achievementsCriteriaKey] as String;
@@ -337,14 +368,25 @@ class DatabaseService {
       }
 
       if (shouldUnlock) {
-        // Check if already unlocked to avoid duplicates
-        final isUnlocked = await isAchievementUnlocked(achievementId);
-        if (!isUnlocked) {
+        final isAlreadyUnlocked = await isAchievementUnlocked(achievementId);
+        if (!isAlreadyUnlocked) {
+          achievementUnlocked = true;
           await unlockAchievement(achievementId);
-          print('Achievement unlocked: ${achievement[_achievementsName]}');
+          
+          // Add to queue instead of showing immediately
+          _achievementQueue.add({
+            'name': achievement[_achievementsName] as String,
+            'description': achievement[_achievementsDescription] as String,
+            'iconPath': achievement[_achievementsIconPath] as String,
+          });
         }
       }
     }
+    
+    // Start showing achievements if we're not already showing one
+    _showNextAchievement();
+    
+    return achievementUnlocked;
   }
 
   // Helper methods for achievement criteria

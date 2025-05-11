@@ -9,6 +9,8 @@ import 'package:timezone/data/latest.dart' as tz;
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -104,6 +106,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey, // Ensure navigatorKey is set
       debugShowCheckedModeBanner: false,
       title: 'Work & Break Timer',
       theme: ThemeData(
