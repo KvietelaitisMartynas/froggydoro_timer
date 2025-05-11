@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:froggydoro/models/timerObject.dart';
+import 'package:froggydoro/models/timer_object.dart';
 import 'package:froggydoro/notifications.dart';
 import 'package:froggydoro/screens/calendar_screen.dart';
 import 'package:froggydoro/screens/settings_screen.dart';
@@ -346,7 +346,7 @@ class _MainScreenState extends State<MainScreen>
   }
 
   // Handles the logic when a timer period (work/break) completes
-  void _handleTimerCompletion({bool triggeredByLoad = false}) {
+  void _handleTimerCompletion({bool triggeredByLoad = false}) async {
     _isRunning = false;
     _startTimeSaved = null;
     _cancelScheduledNotifications();
@@ -380,23 +380,22 @@ class _MainScreenState extends State<MainScreen>
       // ---- Break Finished ----
       _sessionCount++; // Increment session after break
 
-      final String dateOnly = DateTime.now().toIso8601String().split('T')[0]; // saves only the date, no time values 00:00
-      _databaseService.addCalendarEntry(
+      // Add break session to calendar
+      final String dateOnly = DateTime.now().toIso8601String().split('T')[0];
+      await _databaseService.addCalendarEntry(
         dateOnly,
-        _breakMinutes,  // or _workMinutes + _workSeconds / 60 if seconds matter
-        'break',        // type can be 'work' or whatever fits your logic
-        'completed',   // or another status you track
+        _breakMinutes,
+        'break',
+        'completed',
       );
 
       setState(() {
         _isBreakTime = false;
         _totalSeconds = _workMinutes * 60 + _workSeconds;
-      });
-      _saveTimerState();
-
-      setState(() {
         _currentRound++;
       });
+
+      _saveTimerState();
 
       if (!triggeredByLoad && mounted) {
         TimerDialogsHelper.showSessionCompletePopup(
@@ -410,14 +409,19 @@ class _MainScreenState extends State<MainScreen>
       // ---- Work Finished ----
       bool isLastRound = _currentRound >= _roundCountSetting;
 
-        // Save the completed work session before switching to break
-      final String dateOnly = DateTime.now().toIso8601String().split('T')[0];  // saves only the date, no time values 00:00
-      _databaseService.addCalendarEntry(
+      // Add work session to calendar
+      final DateTime now = DateTime.now();
+      final String dateOnly = now.toIso8601String().split('T')[0];
+
+      await _databaseService.addCalendarEntry(
         dateOnly,
-        _workMinutes,  // the duration of the completed work session
-        'work',        // session type for work
-        'completed',   // session status
+        _workMinutes,
+        'work',
+        'completed',
       );
+
+      // Check for achievements separately
+      await _databaseService.checkAndUnlockAchievements(now);
 
       if (isLastRound) {
         // ---- All Rounds Completed ----
@@ -494,6 +498,8 @@ class _MainScreenState extends State<MainScreen>
 
     _startTimeSaved = null;
     _saveTimerState();
+
+    // Do not log the session as completed
   }
 
   // Resets the timer to the beginning of the WORK session
@@ -514,8 +520,8 @@ class _MainScreenState extends State<MainScreen>
     });
 
     _saveTimerState();
-    // Optionally save settings if reset should always use current config
-    // _saveSettingsToPrefs();
+
+    // Do not log the session as completed
   }
 
   // Update settings from SettingsScreen

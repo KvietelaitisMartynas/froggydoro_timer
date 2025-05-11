@@ -44,9 +44,7 @@ class NotificationsHelper {
   }
 
   // Method to cancel notifications
-  Future<void> cancelNotification({
-    required int id,
-  }) async {
+  Future<void> cancelNotification({required int id}) async {
     try {
       await notificationHelper.cancelNotification(id);
       print('Notification with ID $id canceled successfully.');
@@ -56,7 +54,9 @@ class NotificationsHelper {
   }
 
   // Method to cancel all scheduled notifications, passing scheduledNotifications as a parameter
-  Future<void> cancelScheduledNotifications(Set<int> scheduledNotifications) async {
+  Future<void> cancelScheduledNotifications(
+    Set<int> scheduledNotifications,
+  ) async {
     try {
       // Iterate through the list passed as a parameter
       for (int id in scheduledNotifications) {

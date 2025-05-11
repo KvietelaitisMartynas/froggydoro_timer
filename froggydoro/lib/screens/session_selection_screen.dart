@@ -2,7 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 
-import 'package:froggydoro/models/timerObject.dart';
+import 'package:froggydoro/models/timer_object.dart';
 import 'package:froggydoro/screens/time_settings_screen.dart';
 import 'package:froggydoro/services/database_service.dart';
 

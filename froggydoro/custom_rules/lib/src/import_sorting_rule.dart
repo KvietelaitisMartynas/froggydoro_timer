@@ -7,13 +7,15 @@ custom_lint.PluginBase createPlugin() => _ImportSortingLinter();
 
 class _ImportSortingLinter extends custom_lint.PluginBase {
   @override
-  List<custom_lint.LintRule> getLintRules(custom_lint.CustomLintConfigs configs) => [
+  List<custom_lint.LintRule> getLintRules(
+          custom_lint.CustomLintConfigs configs) =>
+      [
         ImportSortingRule(),
       ];
 }
 
 class ImportSortingRule extends custom_lint.DartLintRule {
-  ImportSortingRule() : super(code: _code);
+  const ImportSortingRule() : super(code: _code);
 
   static const _code = custom_lint.LintCode(
     name: 'import_sorting_rule',
@@ -33,7 +35,7 @@ class ImportSortingRule extends custom_lint.DartLintRule {
       for (var i = 1; i < imports.length; i++) {
         final prev = imports[i - 1];
         final curr = imports[i];
-        
+
         final prevUri = prev.uri.stringValue ?? '';
         final currUri = curr.uri.stringValue ?? '';
 
