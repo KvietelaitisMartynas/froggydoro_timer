@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:froggydoro/models/timerObject.dart';
+import 'package:froggydoro/models/timer_object.dart';
 import 'package:froggydoro/screens/session_selection_screen.dart';
 import 'package:froggydoro/widgets/settings_tile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -418,7 +418,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   context: context,
                   onConfirmed: () async {
                     await DatabaseService.instance.clearUserProgress();
-                    
+
                     setState(() {
                       _selectedPreset = null;
                     });

@@ -1,12 +1,17 @@
-import '../models/timerObject.dart';
+import '../models/timer_object.dart';
 import '../services/database_service.dart';
 import '../widgets/time_step.dart';
 import 'package:flutter/material.dart';
 
-
 class TimeSettingsScreen extends StatefulWidget {
   final TimerObject preset;
-  final Function(int workDuration, int breakDuration, int count, String presetName) updateTimer;
+  final Function(
+    int workDuration,
+    int breakDuration,
+    int count,
+    String presetName,
+  )
+  updateTimer;
 
   const TimeSettingsScreen({
     required this.preset,
@@ -48,7 +53,12 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
     );
 
     // Updates the timer preset values after saving in the database
-    widget.updateTimer(_workDuration, _breakDuration, _count, _nameController.text);
+    widget.updateTimer(
+      _workDuration,
+      _breakDuration,
+      _count,
+      _nameController.text,
+    );
 
     // Pops the screen to return to the previous screen
     Navigator.pop(context);

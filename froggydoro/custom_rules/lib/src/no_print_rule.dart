@@ -7,7 +7,8 @@ custom_lint.PluginBase createPlugin() => _PrintStatementLinter();
 
 class _PrintStatementLinter extends custom_lint.PluginBase {
   @override
-  List<custom_lint.LintRule> getLintRules(custom_lint.CustomLintConfigs configs) =>
+  List<custom_lint.LintRule> getLintRules(
+          custom_lint.CustomLintConfigs configs) =>
       [PrintStatementRule()];
 }
 
@@ -18,7 +19,7 @@ class PrintStatementRule extends custom_lint.DartLintRule {
     errorSeverity: ErrorSeverity.WARNING,
   );
 
-  PrintStatementRule() : super(code: _code);
+  const PrintStatementRule() : super(code: _code);
 
   @override
   void run(

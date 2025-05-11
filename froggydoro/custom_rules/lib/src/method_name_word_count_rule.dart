@@ -15,7 +15,7 @@ class _MethodNameWordCountLinter extends custom_lint.PluginBase {
 }
 
 class MethodNameWordCountRule extends custom_lint.DartLintRule {
-  MethodNameWordCountRule() : super(code: _code);
+  const MethodNameWordCountRule() : super(code: _code);
 
   static const _code = custom_lint.LintCode(
     name: 'method_name_min_words',
@@ -35,7 +35,13 @@ class MethodNameWordCountRule extends custom_lint.DartLintRule {
       final words =
           RegExp(r'[A-Z]?[a-z]+|[A-Z]+(?![a-z])').allMatches(name).length;
 
-      final ignoredNames = {'main', 'build', 'initState', 'dispose', 'database'};
+      final ignoredNames = {
+        'main',
+        'build',
+        'initState',
+        'dispose',
+        'database'
+      };
       if (!ignoredNames.contains(name) && words < 2) {
         reporter.atNode(node, _code);
       }

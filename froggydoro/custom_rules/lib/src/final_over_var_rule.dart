@@ -7,17 +7,20 @@ custom_lint.PluginBase createPlugin() => _PreferFinalLinter();
 
 class _PreferFinalLinter extends custom_lint.PluginBase {
   @override
-  List<custom_lint.LintRule> getLintRules(custom_lint.CustomLintConfigs configs) => [
+  List<custom_lint.LintRule> getLintRules(
+          custom_lint.CustomLintConfigs configs) =>
+      [
         PreferFinalRule(),
       ];
 }
 
 class PreferFinalRule extends custom_lint.DartLintRule {
-  PreferFinalRule() : super(code: _code);
+  const PreferFinalRule() : super(code: _code);
 
   static const _code = custom_lint.LintCode(
     name: 'prefer_final_over_var',
-    problemMessage: 'Use final instead of var for variables that are not reassigned.',
+    problemMessage:
+        'Use final instead of var for variables that are not reassigned.',
     errorSeverity: ErrorSeverity.WARNING,
   );
 

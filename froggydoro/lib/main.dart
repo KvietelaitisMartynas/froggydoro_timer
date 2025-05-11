@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:froggydoro/notifications.dart';
 import 'package:froggydoro/screens/main_screen.dart';
 import 'package:froggydoro/services/database_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -11,6 +11,9 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize database and populate achievements
+  await DatabaseService.instance.populateAchievements();
 
   // Initialize timezone data
   tz.initializeTimeZones();
