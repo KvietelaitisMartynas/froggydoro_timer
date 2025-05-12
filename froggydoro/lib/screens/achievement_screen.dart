@@ -90,16 +90,6 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Achievements',
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFFB0C8AE),
-          ),
-        ),
-      ),
       body: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Container(
