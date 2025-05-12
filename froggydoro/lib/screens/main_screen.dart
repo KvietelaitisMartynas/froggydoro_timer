@@ -11,6 +11,7 @@ import 'package:froggydoro/widgets/build_button.dart';
 import 'package:froggydoro/widgets/dialog_helper.dart';
 import 'package:froggydoro/widgets/music_Manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:froggydoro/widgets/calendar_achievement_nav.dart';
 
 class MainScreen extends StatefulWidget {
   final ValueChanged<ThemeMode> onThemeModeChanged;
@@ -674,7 +675,7 @@ class _MainScreenState extends State<MainScreen>
         controller: _tabController,
         physics: const NeverScrollableScrollPhysics(),
         children: [
-          CalendarScreen(),
+          StatsScreen(),
           // Timer View
           Center(
             child: Padding(
@@ -780,7 +781,7 @@ class _MainScreenState extends State<MainScreen>
           items: const [
             BottomNavigationBarItem(
               icon: ImageIcon(AssetImage('assets/Book.png')),
-              label: "Achievements",
+              label: "Stats",
             ),
             BottomNavigationBarItem(
               icon: ImageIcon(AssetImage('assets/clock.png')),

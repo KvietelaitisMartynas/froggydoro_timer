@@ -127,12 +127,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
         brightness == Brightness.dark
             ? const Color(0xFF3A4A38)
             : const Color(0xFFE4E8CD);
-
-    final bubbleColor =
-        brightness == Brightness.dark
-            ? const Color(0xFF63805C)
-            : const Color(0xFFC8CBB2);
-
     final textColor =
         brightness == Brightness.dark ? Colors.white : Colors.black;
 
@@ -143,63 +137,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {}); // Refresh
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      isCalendarScreen ? bubbleColor : backgroundBlockColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30.0),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24.0,
-                    vertical: 12.0,
-                  ),
-                ),
-                child: Text(
-                  'Calendar',
-                  style: TextStyle(
-                    color: textColor,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const AchievementsScreen(),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      !isCalendarScreen ? bubbleColor : backgroundBlockColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30.0),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24.0,
-                    vertical: 12.0,
-                  ),
-                ),
-                child: Text(
-                  'Achievements',
-                  style: TextStyle(
-                    color: textColor,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-
           const SizedBox(height: 16),
 
           // Calendar Block
@@ -332,7 +269,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                     ? (selectedDate != null &&
                                             _isSameDay(selectedDate!, date)
                                         ? Colors.lightGreen
-                                        : bubbleColor)
+                                        : Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? const Color(
+                                          0xFF63805C,
+                                        ) // Dark theme color
+                                        : const Color(
+                                          0xFFC8CBB2,
+                                        )) // Light theme color
                                     : Colors.transparent,
                             child: Text(
                               date.day.toString(),
