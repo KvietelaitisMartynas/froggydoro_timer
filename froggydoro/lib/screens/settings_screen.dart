@@ -174,6 +174,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return brightness == Brightness.dark ? Color(0xFFB0C8AE) : Color(0xFF586F51);
   }
 
+  Color _getBackgroundBlockColor(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    return brightness == Brightness.dark ? Color(0xFF3A4A38) : Color(0xFFE4E8CD);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -301,7 +306,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.secondaryContainer,
+            color: _getBackgroundBlockColor(context),
             borderRadius: BorderRadius.circular(10),
           ),
           child: SwitchListTile(
@@ -411,9 +416,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 backgroundColor:
-                    Theme.of(context).colorScheme.secondaryContainer,
-                foregroundColor:
-                    Theme.of(context).colorScheme.onSecondaryContainer,
+                    _getBackgroundBlockColor(context),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
