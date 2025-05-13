@@ -19,9 +19,12 @@ class SettingsTile extends StatelessWidget {
     final textColor = brightness == Brightness.dark
         ? const Color(0xFFB0C8AE)
         : const Color(0xFF586F51);
+    final backgroundBlockColor = brightness == Brightness.dark
+            ? const Color(0xFF3A4A38)
+            : const Color(0xFFE4E8CD);
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.secondaryContainer,
+        color: backgroundBlockColor,
         borderRadius: BorderRadius.circular(10),
       ),
       child: ListTile(
