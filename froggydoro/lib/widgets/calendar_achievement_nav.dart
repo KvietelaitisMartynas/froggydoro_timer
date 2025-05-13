@@ -42,7 +42,7 @@ class _StatsScreenState extends State<StatsScreen> {
     final bubbleColor = brightness == Brightness.dark
         ? const Color(0xFF63805C)
         : const Color(0xFFC8CBB2);
-    final textColor = brightness == Brightness.dark ? Colors.white : Colors.black;
+    final textColor = brightness == Brightness.dark ? Color(0xFFB0C8AE) : Color(0xFF586F51);
 
     return Scaffold(
       body: Column(
