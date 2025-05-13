@@ -128,7 +128,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             ? const Color(0xFF3A4A38)
             : const Color(0xFFE4E8CD);
     final textColor =
-        brightness == Brightness.dark ? Colors.white : Colors.black;
+        brightness == Brightness.dark ? Color(0xFFB0C8AE) : Color(0xFF586F51);
 
     final bool isCalendarScreen = true; // you're on this screen
 
@@ -190,7 +190,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         style: TextStyle(
                           fontWeight: FontWeight.w500,
                           fontSize: 16,
-                          color: textColor.withOpacity(0.7),
+                          color: textColor,
                         ),
                       ),
                     ),

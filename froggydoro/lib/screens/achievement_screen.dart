@@ -89,12 +89,24 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+
+    final defaultTextColor = brightness == Brightness.dark ? Color(0xFFB0C8AE) : Color(0xFF586F51);
+
+    final backgroundBlockColor =
+        brightness == Brightness.dark
+            ? const Color(0xFF3A4A38)
+            : const Color(0xFFE4E8CD);
+    final achievementBoxColor = 
+        brightness == Brightness.dark
+            ? const Color(0xFF63805C)
+            : const Color(0xFFC8CBB2);
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFE4E8DD),
+            color: backgroundBlockColor,
             borderRadius: BorderRadius.circular(12),
           ),
           padding: const EdgeInsets.all(8.0),
@@ -117,7 +129,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.secondaryContainer,
+                    color: achievementBoxColor,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Column(
@@ -126,7 +138,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                       Icon(
                         isUnlocked ? Icons.emoji_events : Icons.lock_outline,
                         size: 46,
-                        color: isUnlocked ? Colors.amber : Colors.grey,
+                        color: isUnlocked ? Colors.amber : defaultTextColor,
                       ),
                       const SizedBox(height: 8),
                       Text(
@@ -134,7 +146,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
-                          color: isUnlocked ? Colors.amber[700] : Colors.grey,
+                          color: isUnlocked ? Colors.amber[700] : defaultTextColor,
                         ),
                       ),
                       if (parts.length > 1)
@@ -143,7 +155,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
-                            color: isUnlocked ? Colors.amber[700] : Colors.grey,
+                            color: isUnlocked ? Colors.amber[700] : defaultTextColor,
                           ),
                         ),
                     ],

@@ -169,6 +169,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Color _getTextColor(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    return brightness == Brightness.dark ? Color(0xFFB0C8AE) : Color(0xFF586F51);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -176,13 +181,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          const Text(
+          Text(
             'General settings',
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: _getTextColor(context)),
           ),
           const SizedBox(height: 10),
           buildChangeThemeSetting(),
-          const SizedBox(height: 10),
+          const SizedBox(height: 20),
           buildChangeWakelockSetting(),
           const SizedBox(height: 20),
           buildChangeTimeSetting(),
@@ -208,9 +213,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Theme Settings',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _getTextColor(context)),
         ),
         SettingsTile(
           title: 'Theme Mode',
@@ -249,9 +254,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Timer Settings',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _getTextColor(context)),
         ),
         SettingsTile(
           title: 'Session',
@@ -290,9 +295,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Always on display',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _getTextColor(context)),
         ),
         Container(
           decoration: BoxDecoration(
@@ -300,7 +305,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             borderRadius: BorderRadius.circular(10),
           ),
           child: SwitchListTile(
-            title: const Text('Enable'),
+            title: Text('Enable', style: TextStyle(color: _getTextColor(context))),
             value: _isWakeLockEnabled,
             onChanged: (bool value) {
               setState(() {
@@ -342,9 +347,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Ambience Settings',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _getTextColor(context)),
         ),
         SettingsTile(
           title: 'Ambient Sounds',
@@ -396,9 +401,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Progress',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _getTextColor(context)),
           ),
           SizedBox(
             width: double.infinity,
@@ -423,21 +428,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       _selectedPreset = null;
                     });
 
-                    widget.updateTimer(25, 0, 5, 0, 4);
+                    widget.updateTimer(25, 0, 5, 0, 2);
                   },
                 );
               },
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
                       'Reset All Progress',
                       style: TextStyle(
                         fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white70,
+                        fontWeight: FontWeight.normal,
+                        color: _getTextColor(context),
                       ),
                     ),
                   ),
