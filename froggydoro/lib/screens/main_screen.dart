@@ -289,8 +289,7 @@ class _MainScreenState extends State<MainScreen>
     if (_isRunning) return;
     if (_workMinutes == 0 && _workSeconds == 0 && !_isBreakTime) return;
     if (_breakMinutes == 0 && _breakSeconds == 0 && _isBreakTime) return;
-
-    AudioManager().playMusic();
+    if(!_isBreakTime) AudioManager().playMusic();
 
     _startTimeSaved = DateTime.now();
     final endTime = _startTimeSaved!.add(Duration(seconds: _totalSeconds + 1));
@@ -399,6 +398,7 @@ class _MainScreenState extends State<MainScreen>
       _saveTimerState();
 
       if (!triggeredByLoad && mounted) {
+        AudioManager().fadeOutMusic();
         TimerDialogsHelper.showSessionCompletePopup(
           context: context,
           messageTitle: 'Break Over!',
@@ -422,6 +422,7 @@ class _MainScreenState extends State<MainScreen>
       if (isLastRound) {
         // ---- All Rounds Completed ----
         if (!triggeredByLoad && mounted) {
+          AudioManager().fadeOutMusic();
           TimerDialogsHelper.showSessionCompletePopup(
             context: context,
             messageTitle: 'Cycle Complete!',
@@ -446,6 +447,7 @@ class _MainScreenState extends State<MainScreen>
         _saveTimerState();
 
         if (!triggeredByLoad && mounted) {
+          AudioManager().fadeOutMusic();
           TimerDialogsHelper.showSessionCompletePopup(
             context: context,
             messageTitle: 'Work Complete!',
@@ -489,7 +491,7 @@ class _MainScreenState extends State<MainScreen>
   void _stopTimer() {
     if (!_isRunning) return;
 
-    AudioManager().pauseMusic();
+    AudioManager().fadeOutMusic();
     _timer?.cancel();
     _cancelScheduledNotifications();
 
@@ -505,7 +507,7 @@ class _MainScreenState extends State<MainScreen>
 
   // Resets the timer to the beginning of the WORK session
   void _resetTimer() {
-    AudioManager().pauseMusic();
+    AudioManager().fadeOutMusic();
     _timer?.cancel();
     _cancelScheduledNotifications();
 
