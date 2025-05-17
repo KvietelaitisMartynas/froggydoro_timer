@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:froggydoro/models/calendar_entry_object.dart';
 import 'package:froggydoro/models/timer_object.dart';
 import 'package:froggydoro/widgets/dialog_helper.dart';
-import 'package:froggydoro/main.dart';  // Import for navigatorKey
+import 'package:froggydoro/main.dart'; // Import for navigatorKey
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -372,7 +372,7 @@ class DatabaseService {
         if (!isAlreadyUnlocked) {
           achievementUnlocked = true;
           await unlockAchievement(achievementId);
-          
+
           // Add to queue instead of showing immediately
           _achievementQueue.add({
             'name': achievement[_achievementsName] as String,
@@ -382,10 +382,10 @@ class DatabaseService {
         }
       }
     }
-    
+
     // Start showing achievements if we're not already showing one
     _showNextAchievement();
-    
+
     return achievementUnlocked;
   }
 
@@ -572,58 +572,69 @@ class DatabaseService {
   Future<void> populateAchievements() async {
     final db = await database;
 
-    final achievements = [
-      {
-        _achievementsName: 'First Timer',
-        _achievementsDescription: 'Complete your first Pomodoro session',
-        _achievementsIconPath: 'path/to/first_timer_icon.png',
-        _achievementsCriteriaKey: 'pomodoros_completed',
-        _achievementsCriteriaValue: 1,
-      },
-      {
-        _achievementsName: 'Focused Five',
-        _achievementsDescription: 'Complete 5 Pomodoro sessions in one day',
-        _achievementsIconPath: 'path/to/focused_five_icon.png',
-        _achievementsCriteriaKey: 'pomodoros_in_one_day',
-        _achievementsCriteriaValue: 5,
-      },
-      {
-        _achievementsName: 'Streak Starter',
-        _achievementsDescription: 'Use the app 3 days in a row',
-        _achievementsIconPath: 'path/to/streak_starter_icon.png',
-        _achievementsCriteriaKey: 'days_in_a_row',
-        _achievementsCriteriaValue: 3,
-      },
-      {
-        _achievementsName: 'Early Bird',
-        _achievementsDescription: 'Complete a Pomodoro before 9 AM',
-        _achievementsIconPath: 'path/to/early_bird_icon.png',
-        _achievementsCriteriaKey: 'pomodoro_before_9am',
-        _achievementsCriteriaValue: 1,
-      },
-      {
-        _achievementsName: 'Night Owl',
-        _achievementsDescription: 'Complete a Pomodoro after 9 PM',
-        _achievementsIconPath: 'path/to/night_owl_icon.png',
-        _achievementsCriteriaKey: 'pomodoro_after_9pm',
-        _achievementsCriteriaValue: 1,
-      },
-      {
-        _achievementsName: 'Marathoner',
-        _achievementsDescription: 'Complete 25 Pomodoros in one week',
-        _achievementsIconPath: 'path/to/marathoner_icon.png',
-        _achievementsCriteriaKey: 'pomodoros_in_one_week',
-        _achievementsCriteriaValue: 25,
-      },
-    ];
+    if (await tableHasEntries(_achievementsTableName)) {
+      return; // Table already has entries, no need to populate
+    } else {
+      final achievements = [
+        {
+          _achievementsName: 'First Timer',
+          _achievementsDescription: 'Complete your first Pomodoro session',
+          _achievementsIconPath: 'path/to/first_timer_icon.png',
+          _achievementsCriteriaKey: 'pomodoros_completed',
+          _achievementsCriteriaValue: 1,
+        },
+        {
+          _achievementsName: 'Focused Five',
+          _achievementsDescription: 'Complete 5 Pomodoro sessions in one day',
+          _achievementsIconPath: 'path/to/focused_five_icon.png',
+          _achievementsCriteriaKey: 'pomodoros_in_one_day',
+          _achievementsCriteriaValue: 5,
+        },
+        {
+          _achievementsName: 'Streak Starter',
+          _achievementsDescription: 'Use the app 3 days in a row',
+          _achievementsIconPath: 'path/to/streak_starter_icon.png',
+          _achievementsCriteriaKey: 'days_in_a_row',
+          _achievementsCriteriaValue: 3,
+        },
+        {
+          _achievementsName: 'Early Bird',
+          _achievementsDescription: 'Complete a Pomodoro before 9 AM',
+          _achievementsIconPath: 'path/to/early_bird_icon.png',
+          _achievementsCriteriaKey: 'pomodoro_before_9am',
+          _achievementsCriteriaValue: 1,
+        },
+        {
+          _achievementsName: 'Night Owl',
+          _achievementsDescription: 'Complete a Pomodoro after 9 PM',
+          _achievementsIconPath: 'path/to/night_owl_icon.png',
+          _achievementsCriteriaKey: 'pomodoro_after_9pm',
+          _achievementsCriteriaValue: 1,
+        },
+        {
+          _achievementsName: 'Marathoner',
+          _achievementsDescription: 'Complete 25 Pomodoros in one week',
+          _achievementsIconPath: 'path/to/marathoner_icon.png',
+          _achievementsCriteriaKey: 'pomodoros_in_one_week',
+          _achievementsCriteriaValue: 25,
+        },
+      ];
 
-    for (var achievement in achievements) {
-      await db.insert(
-        _achievementsTableName,
-        achievement,
-        conflictAlgorithm: ConflictAlgorithm.ignore,
-      );
+      for (var achievement in achievements) {
+        await db.insert(
+          _achievementsTableName,
+          achievement,
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      }
     }
+  }
+
+  Future<bool> tableHasEntries(String tableName) async {
+    final db = await database;
+    final result = await db.rawQuery('SELECT COUNT(*) FROM $tableName');
+    final count = Sqflite.firstIntValue(result) ?? 0;
+    return count > 0;
   }
 
   // Deletes user data from the database
