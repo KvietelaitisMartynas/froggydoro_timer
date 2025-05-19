@@ -1,17 +1,18 @@
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:froggydoro/models/timer_object.dart';
 import 'package:froggydoro/notifications.dart';
-import 'package:froggydoro/screens/calendar_screen.dart';
 import 'package:froggydoro/screens/settings_screen.dart';
 import 'package:froggydoro/services/database_service.dart';
-import 'package:froggydoro/widgets/build_button.dart';
-import 'package:froggydoro/widgets/dialog_helper.dart';
-import 'package:froggydoro/widgets/music_Manager.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:froggydoro/widgets/calendar_achievement_nav.dart';
+import 'package:froggydoro/widgets/dialog_helper.dart';
+import 'package:froggydoro/widgets/main_timer_section.dart';
+import 'package:froggydoro/widgets/music_Manager.dart';
+import 'package:froggydoro/widgets/timer_button_row.dart';
 
 class MainScreen extends StatefulWidget {
   final ValueChanged<ThemeMode> onThemeModeChanged;
@@ -289,7 +290,7 @@ class _MainScreenState extends State<MainScreen>
     if (_isRunning) return;
     if (_workMinutes == 0 && _workSeconds == 0 && !_isBreakTime) return;
     if (_breakMinutes == 0 && _breakSeconds == 0 && _isBreakTime) return;
-    if(!_isBreakTime) AudioManager().playMusic();
+    if (!_isBreakTime) AudioManager().playMusic();
 
     _startTimeSaved = DateTime.now();
     final endTime = _startTimeSaved!.add(Duration(seconds: _totalSeconds + 1));
@@ -365,7 +366,10 @@ class _MainScreenState extends State<MainScreen>
           widget.notifications.showNotification(
             id: 2,
             title: _isBreakTime ? 'Break Over!' : 'Work Complete!',
-            body: _isBreakTime ? 'Time to get back to work.' : 'Ready for a break?',
+            body:
+                _isBreakTime
+                    ? 'Time to get back to work.'
+                    : 'Ready for a break?',
           );
         }
       } catch (e) {
@@ -443,7 +447,7 @@ class _MainScreenState extends State<MainScreen>
           _isBreakTime = true; // Switch to break mode conceptually
           _totalSeconds = _breakMinutes * 60 + _breakSeconds;
         });
-        
+
         _saveTimerState();
 
         if (!triggeredByLoad && mounted) {
@@ -558,106 +562,13 @@ class _MainScreenState extends State<MainScreen>
     return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
-  // --- Build Methods ---
-
-  // ============================================================
-  // REVERTED buildButtons METHOD (Using _hasStarted logic)
-  // ============================================================
-  Widget buildButtons(BuildContext context) {
-    // Calculate maxSeconds based on current mode
-    final maxSeconds =
-        _isBreakTime
-            ? (_breakMinutes * 60 + _breakSeconds)
-            : (_workMinutes * 60 + _workSeconds);
-
-    // Determine if the timer is at the start or end
-    final isCompleted = _totalSeconds == maxSeconds || _totalSeconds == 0;
-    final theme = Theme.of(context);
-
-    final buttonColor =
-        theme.brightness == Brightness.dark
-            ? const Color(0xFFB0C8AE)
-            : const Color(0xFF586F51);
-
-    // Show only Start button if timer has never started in this session
-    if (!_hasStarted && !_isRunning) {
-      return ButtonWidget(
-        color: buttonColor,
-        text: 'Start',
-        iconLocation: 'assets/Icons/Play.svg',
-        width: 200, // The original wide width
-        onClicked: () {
-          // Note: _hasStarted is set inside _startTimer now
-          _startTimer();
-        },
-      );
-    }
-
-    // Show Pause/Start and Reset if running OR if paused mid-way
-    return _isRunning || !isCompleted
-        ? Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ButtonWidget(
-              color: buttonColor,
-              // Text changes based on running state
-              text: _isRunning ? 'Stop' : 'Start', // Original used "Stop"
-              iconLocation:
-                  _isRunning
-                      ? 'assets/Icons/Pause.svg'
-                      : 'assets/Icons/Play.svg',
-              width: 120,
-              onClicked: () {
-                // Don't need to manage _hasStarted here, _startTimer/_stopTimer handle it
-                if (_isRunning) {
-                  _stopTimer(); // Use _stopTimer to pause
-                } else {
-                  _startTimer(); // Use _startTimer to resume/start
-                }
-              },
-            ),
-            const SizedBox(width: 20),
-            ButtonWidget(
-              color: buttonColor,
-              text: 'Reset',
-              iconLocation: 'assets/Icons/Rewind.svg',
-              width: 120,
-              onClicked: () {
-                // Call the confirmation dialog instead of _resetTimer directly
-                TimerDialogsHelper.showResetConfirmationDialog(
-                  context: context,
-                  onConfirmed: _resetTimer,
-                );
-              },
-            ),
-          ],
-        )
-        // Show only Start button if timer is paused AND completed (at 0 or max)
-        : ButtonWidget(
-          color: buttonColor,
-          text: 'Start',
-          iconLocation: 'assets/Icons/Play.svg',
-          width: 200, // The original wide width
-          onClicked: () {
-            // _startTimer handles setting _hasStarted
-            _startTimer();
-          },
-        );
-  }
-  // ============================================================
-  // END OF REVERTED buildButtons METHOD
-  // ============================================================
+  // --- Build Method ---
 
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final screenHeight = screenSize.height;
     final screenWidth = screenSize.width;
-
-    // Text for rounds display
-    String roundsText = "Round $_currentRound of $_roundCountSetting";
-    // Use _hasStarted to determine initial round text display might be better
-    if (!_hasStarted && !_isRunning) roundsText = "Configure in Settings";
 
     return Scaffold(
       extendBody: true,
@@ -685,81 +596,41 @@ class _MainScreenState extends State<MainScreen>
                 vertical: 16.0,
                 horizontal: 8.0,
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SizedBox(height: screenHeight * 0.02),
-                  // ============================================================
-                  // REVERTED "Work Time"/"Break Time" Text
-                  // ============================================================
-                  Text(
-                    _isBreakTime
-                        ? "Break Time"
-                        : "Work Time", // Original simpler logic
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w300,
-                      fontStyle: FontStyle.italic,
-                      fontSize: screenWidth * 0.06,
+              child: MainTimerSection(
+                screenHeight: screenHeight,
+                screenWidth: screenWidth,
+                totalSeconds: _totalSeconds,
+                isBreakTime: _isBreakTime,
+                currentRound: _currentRound,
+                roundCountSetting: _roundCountSetting,
+                formatTime: _formatTime,
+                buildButtons:
+                    (context) => TimerButtonRow(
+                      isRunning: _isRunning,
+                      hasStarted: _hasStarted,
+                      isBreakTime: _isBreakTime,
+                      workMinutes: _workMinutes,
+                      workSeconds: _workSeconds,
+                      breakMinutes: _breakMinutes,
+                      breakSeconds: _breakSeconds,
+                      totalSeconds: _totalSeconds,
+                      onStart: _startTimer,
+                      onStop: _stopTimer,
+                      onReset: _resetTimer,
                     ),
-                  ),
-                  // ============================================================
-                  SizedBox(height: screenHeight * 0.02),
-                  Text(
-                    roundsText, // Keep using roundsText
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: screenWidth * 0.045,
-                    ),
-                  ),
-                  SizedBox(height: screenHeight * 0.02),
-                  Image.asset(
-                    _isBreakTime
-                        ? 'assets/rest_froggy.png'
-                        : 'assets/froggy.png',
-                    height: screenHeight * 0.3,
-                    color:
-                        Theme.of(
-                          context,
-                        ).bottomNavigationBarTheme.selectedItemColor,
-                  ),
-                  SizedBox(height: screenHeight * 0.02),
-                  Text(
-                    _formatTime(_totalSeconds),
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: screenWidth * 0.15,
-                    ),
-                  ),
-                  SizedBox(height: screenHeight * 0.02),
-                  buildButtons(context), // Use the dynamic button builder
-                  SizedBox(height: screenHeight * 0.02),
-                  // Test button (optional)
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _workMinutes = 0;
-                        _workSeconds = 10;
-                        _breakMinutes = 0;
-                        _breakSeconds = 5;
-                        _roundCountSetting = 2;
-                      });
-                      _updateSettings(
-                        0,
-                        10,
-                        0,
-                        5,
-                        2,
-                      ); // Use updateSettings to apply
-                    },
-                    child: const Text('Load Test Durations'),
-                  ),
-                ],
+                onTestDurations: () {
+                  setState(() {
+                    _workMinutes = 0;
+                    _workSeconds = 10;
+                    _breakMinutes = 0;
+                    _breakSeconds = 5;
+                    _roundCountSetting = 2;
+                  });
+                  _updateSettings(0, 10, 0, 5, 2);
+                },
               ),
             ),
           ),
-          // Achievements View (Placeholder)
-          //AchievementsScreen(),
           // Settings View
           SettingsScreen(
             updateTimer: _updateSettings,
@@ -796,31 +667,9 @@ class _MainScreenState extends State<MainScreen>
           ],
         ),
       ),
-      /* bottomNavigationBar: SafeArea(
-        top: false, // Don't add padding for top safe area
-        left: false,
-        right: false,
-        child: Row(
-          // Your existing Row of IconButtons
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            IconButton(
-              icon: const ImageIcon(AssetImage('assets/clock.png')),
-              iconSize: 24,
-              onPressed: () => _onItemTapped(0),
-            ),
-            IconButton(
-              icon: const ImageIcon(AssetImage('assets/Sliders.png')),
-              iconSize: 24,
-              onPressed: () => _onItemTapped(1),
-            ),
-          ],
-        ),
-      ), */
     );
   }
 
-  // --- Permission Methods (Keep as is) ---
   /// Checks whether the app has permission to schedule exact alarms on Android.
   Future<bool> isExactAlarmPermissionGranted() async {
     if (Platform.isAndroid) {
@@ -830,7 +679,7 @@ class _MainScreenState extends State<MainScreen>
         );
         return isGranted;
       } on PlatformException catch (e) {
-        print('Failed to check exact alarm permission: ${e.message}');
+        log('Failed to check exact alarm permission: ${e.message}');
       }
     }
     return false;
@@ -845,7 +694,7 @@ class _MainScreenState extends State<MainScreen>
           await _channel.invokeMethod('requestExactAlarmPermission');
         }
       } on PlatformException catch (e) {
-        print('Failed to request exact alarm permission: ${e.message}');
+        log('Failed to request exact alarm permission: ${e.message}');
       }
     }
   }
