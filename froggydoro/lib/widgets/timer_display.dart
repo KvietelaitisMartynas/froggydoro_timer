@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class TimerDisplay extends StatelessWidget {
-  final ValueNotifier secondsNotifier;
+  final ValueNotifier<int> secondsNotifier;
   final double fontSize;
   final String Function(int) formatTime;
   final TextStyle? style;
