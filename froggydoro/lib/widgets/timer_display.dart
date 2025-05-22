@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
 class TimerDisplay extends StatelessWidget {
-  final int totalSeconds;
+  final ValueNotifier secondsNotifier;
   final double fontSize;
   final String Function(int) formatTime;
   final TextStyle? style;
 
   const TimerDisplay({
     Key? key,
-    required this.totalSeconds,
+    required this.secondsNotifier,
     required this.fontSize,
     required this.formatTime,
     this.style,
@@ -16,16 +16,21 @@ class TimerDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String formattedTime = formatTime(totalSeconds);
-    return Text(
-      formattedTime,
-      style:
-          style ??
-          TextStyle(
-            fontSize: fontSize,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+    return ValueListenableBuilder(
+      valueListenable: secondsNotifier,
+      builder: (context, seconds, _) {
+        final String formattedTime = formatTime(seconds);
+        return Text(
+          formattedTime,
+          style:
+              style ??
+              TextStyle(
+                fontSize: fontSize,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+        );
+      },
     );
   }
 }
