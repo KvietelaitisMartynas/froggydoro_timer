@@ -61,6 +61,7 @@ class _MainScreenState extends State<MainScreen>
       false; // <--- ADDED BACK: Tracks if timer started at least once since reset/load
 
   final Set<int> _scheduledNotifications = {}; // Track scheduled notifications
+  final ValueNotifier<int> _secondsNotifier = ValueNotifier(0);
 
   // Constants for SharedPreferences keys
   static const String prefWorkMinutes = 'workMinutes';
@@ -179,6 +180,7 @@ class _MainScreenState extends State<MainScreen>
     if (mounted) {
       setState(() {
         _totalSeconds = newTotalSeconds;
+        _secondsNotifier.value = newTotalSeconds; // Update notifier
         _isRunning = newIsRunning; // Update the state variable
       });
 
@@ -203,6 +205,7 @@ class _MainScreenState extends State<MainScreen>
       // If not mounted, just update the instance variables directly
       // This might happen if load finishes after dispose but before async gap completes
       _totalSeconds = newTotalSeconds;
+      _secondsNotifier.value = newTotalSeconds; // Update notifier
       _isRunning = newIsRunning;
     }
   }
@@ -238,6 +241,7 @@ class _MainScreenState extends State<MainScreen>
   // Cleans up resources when the widget is removed from the widget tree.
   @override
   void dispose() {
+    _secondsNotifier.dispose(); // Clean up the notifier
     WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     _tabController.dispose();
@@ -396,6 +400,7 @@ class _MainScreenState extends State<MainScreen>
       setState(() {
         _isBreakTime = false;
         _totalSeconds = _workMinutes * 60 + _workSeconds;
+        _secondsNotifier.value = _totalSeconds; // Update notifier
         _currentRound++;
       });
 
@@ -446,6 +451,7 @@ class _MainScreenState extends State<MainScreen>
         setState(() {
           _isBreakTime = true; // Switch to break mode conceptually
           _totalSeconds = _breakMinutes * 60 + _breakSeconds;
+          _secondsNotifier.value = _totalSeconds; // Update notifier
         });
 
         _saveTimerState();
@@ -481,9 +487,8 @@ class _MainScreenState extends State<MainScreen>
       return;
     }
     if (_totalSeconds > 0) {
-      setState(() {
-        _totalSeconds--;
-      });
+      _totalSeconds--;
+      _secondsNotifier.value = _totalSeconds;
     } else {
       timer.cancel();
       _isRunning = false;
@@ -521,6 +526,7 @@ class _MainScreenState extends State<MainScreen>
       _hasStartedCycle = false;
       _hasStarted = false; // <-- SET _hasStarted TO FALSE
       _totalSeconds = _workMinutes * 60 + _workSeconds;
+      _secondsNotifier.value = _totalSeconds; // Update notifier
       _currentRound = 1;
       _sessionCount = 0;
       _startTimeSaved = null;
@@ -574,6 +580,9 @@ class _MainScreenState extends State<MainScreen>
       extendBody: true,
       appBar: AppBar(
         centerTitle: true,
+        toolbarHeight: 50,
+        automaticallyImplyLeading: false,
+        titleSpacing: 0,
         title: const Text(
           'Froggydoro',
           style: TextStyle(
@@ -599,7 +608,7 @@ class _MainScreenState extends State<MainScreen>
               child: MainTimerSection(
                 screenHeight: screenHeight,
                 screenWidth: screenWidth,
-                totalSeconds: _totalSeconds,
+                secondsNotifier: _secondsNotifier,
                 isBreakTime: _isBreakTime,
                 currentRound: _currentRound,
                 roundCountSetting: _roundCountSetting,

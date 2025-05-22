@@ -4,7 +4,7 @@ import 'timer_display.dart';
 class MainTimerSection extends StatelessWidget {
   final double screenWidth;
   final double screenHeight;
-  final int totalSeconds;
+  final ValueNotifier<int> secondsNotifier;
   final bool isBreakTime;
   final int currentRound;
   final int roundCountSetting;
@@ -16,7 +16,7 @@ class MainTimerSection extends StatelessWidget {
     Key? key,
     required this.screenWidth,
     required this.screenHeight,
-    required this.totalSeconds,
+    required this.secondsNotifier,
     required this.isBreakTime,
     required this.currentRound,
     required this.roundCountSetting,
@@ -57,7 +57,7 @@ class MainTimerSection extends StatelessWidget {
         ),
         SizedBox(height: screenHeight * 0.02),
         TimerDisplay(
-          totalSeconds: totalSeconds,
+          secondsNotifier: secondsNotifier,
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
             fontWeight: FontWeight.bold,
             fontSize: screenWidth * 0.15,
