@@ -171,12 +171,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Color _getTextColor(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    return brightness == Brightness.dark ? Color(0xFFB0C8AE) : Color(0xFF586F51);
+    return brightness == Brightness.dark
+        ? Color(0xFFB0C8AE)
+        : Color(0xFF586F51);
   }
 
   Color _getBackgroundBlockColor(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    return brightness == Brightness.dark ? Color(0xFF3A4A38) : Color(0xFFE4E8CD);
+    return brightness == Brightness.dark
+        ? Color(0xFF3A4A38)
+        : Color(0xFFE4E8CD);
   }
 
   @override
@@ -184,11 +188,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: ListView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.only(
+          top: 16,
+          right: 16,
+          left: 16,
+          bottom: 100,
+        ),
         children: [
           Text(
             'General settings',
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: _getTextColor(context)),
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: _getTextColor(context),
+            ),
           ),
           const SizedBox(height: 10),
           buildChangeThemeSetting(),
@@ -220,8 +233,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       children: [
         Text(
           'Theme Settings',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _getTextColor(context)),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: _getTextColor(context),
+          ),
         ),
+        SizedBox(height: 10),
         SettingsTile(
           title: 'Theme Mode',
           subtitle: selectedTheme,
@@ -261,8 +279,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       children: [
         Text(
           'Timer Settings',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _getTextColor(context)),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: _getTextColor(context),
+          ),
         ),
+        SizedBox(height: 10),
         SettingsTile(
           title: 'Session',
           subtitle:
@@ -302,15 +325,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
       children: [
         Text(
           'Always on display',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _getTextColor(context)),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: _getTextColor(context),
+          ),
         ),
+        SizedBox(height: 10),
         Container(
           decoration: BoxDecoration(
             color: _getBackgroundBlockColor(context),
             borderRadius: BorderRadius.circular(10),
           ),
           child: SwitchListTile(
-            title: Text('Enable', style: TextStyle(color: _getTextColor(context))),
+            title: Text(
+              'Enable',
+              style: TextStyle(color: _getTextColor(context)),
+            ),
             value: _isWakeLockEnabled,
             onChanged: (bool value) {
               setState(() {
@@ -354,8 +385,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       children: [
         Text(
           'Ambience Settings',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _getTextColor(context)),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: _getTextColor(context),
+          ),
         ),
+        SizedBox(height: 10),
         SettingsTile(
           title: 'Ambient Sounds',
           subtitle: selectedAmbience,
@@ -408,15 +444,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           Text(
             'Progress',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _getTextColor(context)),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: _getTextColor(context),
+            ),
           ),
+          SizedBox(height: 10),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor:
-                    _getBackgroundBlockColor(context),
+                backgroundColor: _getBackgroundBlockColor(context),
+                shadowColor: Colors.transparent,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),

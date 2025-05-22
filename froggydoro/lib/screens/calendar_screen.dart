@@ -133,11 +133,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
     final bool isCalendarScreen = true; // you're on this screen
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.only(right: 16, left: 16, top: 16, bottom: 100),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-
           // Calendar Block
           Container(
             padding: const EdgeInsets.all(20.0),
