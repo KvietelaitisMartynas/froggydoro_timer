@@ -171,50 +171,167 @@ class _SessionSelectionScreenState extends State<SessionSelectionScreen> {
     );
   }
 
+Color _getTextColor(BuildContext context) {
+  final brightness = Theme.of(context).brightness;
+  return brightness == Brightness.dark
+      ? const Color(0xFFABC2A9) 
+      : const Color(0xFF586F51);
+}
+
+  Color _getIconColor(BuildContext context) {
+    return _getTextColor(context);
+  }
+
+  Color _getBackgroundBlockColor(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    return brightness == Brightness.dark ? const Color(0xFF3A4A38) : const Color(0xFFE4E8CD);
+  }
+
+  Color _getCardColor(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    return brightness == Brightness.dark ? const Color(0xFF586F51) : Theme.of(context).cardColor;
+  }
+
+  Color _getBorderColor() {
+    return Colors.grey.shade400;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final backgroundBlockColor = _getBackgroundBlockColor(context);
+    final textColor = _getTextColor(context);
+    final iconColor = textColor;
+    final cardColor = _getCardColor(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Select Session Preset"),
-        actions: [
-          IconButton(icon: const Icon(Icons.add), onPressed: _addNewPreset),
-        ],
+        centerTitle: true,
+        title: const Text(
+          'Froggydoro',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontWeight: FontWeight.w600,
+            fontSize: 24,
+            letterSpacing: -0.24,
+          ),
+        ),
+        automaticallyImplyLeading: false,
       ),
-      body: ListView.builder(
-        itemCount: _presets.length,
-        itemBuilder: (context, index) {
-          final preset = _presets[index];
-          return Container(
-            margin: const EdgeInsets.all(8.0),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey, width: 1.0),
-              borderRadius: BorderRadius.circular(8.0),
-            ),
-            child: ListTile(
-              title: Text(preset.name),
-              subtitle: Text(
-                '${preset.count} times | ${preset.workDuration} min | ${preset.breakDuration} min',
+      body: Center(
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.92,
+          margin: const EdgeInsets.symmetric(vertical: 20.0),
+          padding: const EdgeInsets.only(
+            top: 16.0,
+            left: 16.0,
+            right: 16.0,
+            bottom: 48.0,
+          ),
+          decoration: BoxDecoration(
+            color: backgroundBlockColor,
+            borderRadius: BorderRadius.circular(16.0),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
               ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
+            ],
+          ),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () async {
-                      _showResetConfirmationDialog(context, preset);
-                    },
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.arrow_back, color: iconColor, size: 28),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Session settings',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: textColor.withOpacity(0.7),
+                        ),
+                      ),
+                    ],
                   ),
                   IconButton(
-                    icon: const Icon(Icons.edit, color: Colors.blue),
-                    onPressed: () => _editPreset(preset),
+                    icon: Icon(Icons.add_box, color: iconColor, size: 28),
+                    onPressed: _addNewPreset,
                   ),
                 ],
               ),
-              onTap: () => _selectPreset(preset),
-            ),
-          );
-        },
+              const SizedBox(height: 12),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _presets.length,
+                itemBuilder: (context, index) {
+                  final preset = _presets[index];
+                  return Container(
+                    margin: const EdgeInsets.symmetric(vertical: 4.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+                    decoration: BoxDecoration(
+                      color: cardColor,
+                      border: Border.all(color: Colors.grey.shade400),
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    child: ListTile(
+                      dense: true,
+                      visualDensity: const VisualDensity(horizontal: 0, vertical: -4),
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        preset.name,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: textColor.withOpacity(0.7),
+                        ),
+                      ),
+                      subtitle: Row(
+                        children: [
+                          Icon(Icons.check_box, size: 18, color: iconColor),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              '${preset.count} times | ${preset.workDuration} min | ${preset.breakDuration} min',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: textColor.withOpacity(0.7),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.delete, color: iconColor, size: 24),
+                            onPressed: () => _showResetConfirmationDialog(context, preset),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.edit_square, color: iconColor, size: 24),
+                            onPressed: () => _editPreset(preset),
+                          ),
+                        ],
+                      ),
+                      onTap: () => _selectPreset(preset),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
+
+
 }
